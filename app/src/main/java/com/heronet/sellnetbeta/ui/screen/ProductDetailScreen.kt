@@ -10,6 +10,7 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.selection.SelectionContainer
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.*
@@ -21,6 +22,7 @@ import androidx.compose.runtime.produceState
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
@@ -29,6 +31,8 @@ import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.google.accompanist.coil.rememberCoilPainter
+import com.google.accompanist.imageloading.ImageLoadState
+import com.heronet.sellnetbeta.R
 import com.heronet.sellnetbeta.model.Product
 import com.heronet.sellnetbeta.util.DateParser
 import com.heronet.sellnetbeta.util.Resource
@@ -99,29 +103,76 @@ fun Images(photos: List<Product.Photo>, modifier: Modifier = Modifier) {
         mutableStateOf(photos[0])
     }
     Column(modifier = modifier, horizontalAlignment = Alignment.CenterHorizontally) {
-        Image(
-            painter = rememberCoilPainter(request = photo.value.imageUrl),
-            contentDescription = photo.value.publicId,
-            modifier = Modifier
-                .fillMaxWidth()
-                .shadow(8.dp),
-            contentScale = ContentScale.Crop
-        )
+        Box(modifier = Modifier.fillMaxWidth()) {
+            val painter = rememberCoilPainter(request = photo.value.imageUrl)
+            Image(
+                painter = painter,
+                contentDescription = photo.value.publicId,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .shadow(8.dp, RoundedCornerShape(8.dp))
+                    .clip(RoundedCornerShape(8.dp)),
+                contentScale = ContentScale.Crop
+            )
+            when (painter.loadState) {
+                is ImageLoadState.Loading -> {
+                    // Display a circular progress indicator whilst loading
+                    Image(
+                        painter = rememberCoilPainter(request = R.drawable.placeholder),
+                        contentDescription = photo.value.publicId,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .shadow(8.dp, RoundedCornerShape(8.dp))
+                            .clip(RoundedCornerShape(8.dp)),
+                        contentScale = ContentScale.Crop
+                    )
+                }
+                is ImageLoadState.Error -> {
+                    // Display some content if the request fails
+                }
+                else -> {}
+            }
+        }
         Spacer(modifier = Modifier.padding(4.dp))
         LazyRow(
-            horizontalArrangement = Arrangement.spacedBy(4.dp)
+            horizontalArrangement = Arrangement.spacedBy(8.dp),
         ) {
             items(photos) { localPhoto ->
-                Image(
-                    painter = rememberCoilPainter(request = localPhoto.imageUrl),
-                    contentDescription = null,
-                    modifier = Modifier
-                        .width(80.dp)
-                        .height(80.dp)
-                        .shadow(8.dp)
-                        .clickable { photo.value = localPhoto },
-                    contentScale = ContentScale.Crop
-                )
+                Box(modifier = Modifier
+                    .width(80.dp)
+                    .height(80.dp)) {
+                    val painter = rememberCoilPainter(request = localPhoto.imageUrl)
+                    Image(
+                        painter = painter,
+                        contentDescription = null,
+                        modifier = Modifier
+                            .width(80.dp)
+                            .height(80.dp)
+                            .shadow(8.dp, RoundedCornerShape(8.dp))
+                            .clip(RoundedCornerShape(8.dp))
+                            .clickable { photo.value = localPhoto },
+                        contentScale = ContentScale.Crop
+                    )
+                    when (painter.loadState) {
+                        is ImageLoadState.Loading -> {
+                            Image(
+                                painter = rememberCoilPainter(request = R.drawable.placeholder),
+                                contentDescription = null,
+                                modifier = Modifier
+                                    .width(80.dp)
+                                    .height(80.dp)
+                                    .shadow(4.dp, RoundedCornerShape(8.dp))
+                                    .clip(RoundedCornerShape(8.dp))
+                                    .clickable { photo.value = localPhoto },
+                                contentScale = ContentScale.Crop
+                            )
+                        }
+                        is ImageLoadState.Error -> {
+                            // Display some content if the request fails
+                        }
+                        else -> {}
+                    }
+                }
             }
         }
     }

@@ -21,6 +21,8 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import com.google.accompanist.coil.rememberCoilPainter
+import com.google.accompanist.imageloading.ImageLoadState
+import com.heronet.sellnetbeta.R
 import com.heronet.sellnetbeta.model.Product
 import com.heronet.sellnetbeta.util.DateParser
 import com.heronet.sellnetbeta.viewmodel.ProductsViewModel
@@ -103,17 +105,40 @@ fun ItemCard(
         elevation = 8.dp,
     ) {
         Row {
-            Image(
-                painter = rememberCoilPainter(
+            Box(
+                modifier = Modifier
+                .height(130.dp)
+                .width(130.dp)
+            ) {
+                val painter = rememberCoilPainter(
                     request = product.thumbnail.imageUrl,
                     fadeIn = true
-                ),
-                contentDescription = "Item Image",
-                contentScale = ContentScale.Crop,
-                modifier = Modifier
-                    .height(130.dp)
-                    .width(130.dp)
-            )
+                )
+                Image(
+                    painter = painter,
+                    contentDescription = product.thumbnail.publicId,
+                    contentScale = ContentScale.Crop,
+                    modifier = Modifier
+                        .height(130.dp)
+                        .width(130.dp)
+                )
+                when (painter.loadState) {
+                    is ImageLoadState.Loading -> {
+                        Image(
+                            painter = rememberCoilPainter(request = R.drawable.placeholder),
+                            contentDescription = product.thumbnail.publicId,
+                            contentScale = ContentScale.Crop,
+                            modifier = Modifier
+                                .height(130.dp)
+                                .width(130.dp)
+                        )
+                    }
+                    is ImageLoadState.Error -> {
+                        // Display some content if the request fails
+                    }
+                    else -> {}
+                }
+            }
 
             Column(Modifier.padding(8.dp)) {
                 Text(

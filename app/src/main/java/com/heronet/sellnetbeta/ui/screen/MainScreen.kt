@@ -16,6 +16,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavDestination.Companion.hierarchy
 import androidx.navigation.NavGraph.Companion.findStartDestination
+import androidx.navigation.NavHostController
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import com.heronet.sellnetbeta.ui.navigation.NavHostContainer
@@ -30,12 +31,11 @@ fun MainScreen(productsViewModel: ProductsViewModel, authViewModel: AuthViewMode
     val scaffoldState = rememberScaffoldState()
     val navController = rememberNavController()
     val navDestinations = remember {
-        listOf(
+        listOf<Screen>(
             Screen.Products
         )
     }
     val isTokenRefreshing by remember { authViewModel.isRefreshing }
-    val authErrorText by remember { authViewModel.authErrorText }
 
     Scaffold(
         scaffoldState = scaffoldState,
@@ -51,7 +51,9 @@ fun MainScreen(productsViewModel: ProductsViewModel, authViewModel: AuthViewMode
             when {
                 isTokenRefreshing -> {
                     Column(
-                        modifier = Modifier.fillMaxSize().padding(innerPadding),
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .padding(innerPadding),
                         horizontalAlignment = Alignment.CenterHorizontally,
                         verticalArrangement = Arrangement.Center
                     ) {
@@ -73,29 +75,38 @@ fun MainScreen(productsViewModel: ProductsViewModel, authViewModel: AuthViewMode
             DrawerScreen()
         },
         bottomBar = {
-            BottomNavigation {
-                val navBackStackEntry by navController.currentBackStackEntryAsState()
-                val currentDestination = navBackStackEntry?.destination
-                navDestinations.forEach { screen ->
-                    BottomNavigationItem(
-                        icon = { Icon(
-                            imageVector = Icons.Filled.ShoppingCart,
-                            contentDescription = "Cart Icon"
-                        )},
-                        label = { Text(text = stringResource(id = screen.resourceId)) },
-                        selected = currentDestination?.hierarchy?.any { it.route == screen.route } == true,
-                        onClick = {
-                            navController.navigate(screen.route) {
-                                popUpTo(navController.graph.findStartDestination().id) {
-                                    saveState = true
+            if (showBottomNav(navController = navController)) {
+                BottomNavigation {
+                    val navBackStackEntry by navController.currentBackStackEntryAsState()
+                    val currentDestination = navBackStackEntry?.destination
+                    navDestinations.forEach { screen ->
+                        BottomNavigationItem(
+                            icon = { Icon(
+                                imageVector = Icons.Filled.ShoppingCart,
+                                contentDescription = "Cart Icon"
+                            )},
+                            label = { Text(text = stringResource(id = screen.resourceId)) },
+                            selected = currentDestination?.hierarchy?.any { it.route == screen.route } == true,
+                            onClick = {
+                                navController.navigate(screen.route) {
+                                    popUpTo(navController.graph.findStartDestination().id) {
+                                        saveState = true
+                                    }
+                                    launchSingleTop = true
+                                    restoreState = true
                                 }
-                                launchSingleTop = true
-                                restoreState = true
                             }
-                        }
-                    )
+                        )
+                    }
                 }
             }
+
         }
     )
+}
+@Composable
+fun showBottomNav(navController: NavHostController): Boolean {
+    val navBackStackEntry by navController.currentBackStackEntryAsState()
+    val currentDestination = navBackStackEntry?.destination
+    return currentDestination?.hierarchy?.any { it.route == Screen.Products.route } == true
 }
