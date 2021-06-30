@@ -1,9 +1,8 @@
 package com.heronet.sellnetbeta.web
 
+import com.heronet.sellnetbeta.model.AuthData
 import com.heronet.sellnetbeta.model.Product
-import retrofit2.http.GET
-import retrofit2.http.Path
-import retrofit2.http.Query
+import retrofit2.http.*
 
 interface SellnetApi {
     @GET("products/all")
@@ -14,4 +13,10 @@ interface SellnetApi {
 
     @GET("products/{id}")
     suspend fun getProduct(@Path("id") id: String): Product
+
+    @POST("account/login")
+    suspend fun login(@Body loginDto: LoginDto): AuthData
+
+    @POST("account/refresh")
+    suspend fun refreshToken(@Header("Authorization") authorization: String, @Body authData: AuthData): AuthData
 }

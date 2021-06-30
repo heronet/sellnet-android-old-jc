@@ -25,7 +25,7 @@ import com.heronet.sellnetbeta.viewmodel.ProductsViewModel
 
 @Composable
 fun AddProductScreen(
-    viewModel: ProductsViewModel,
+    productsViewModel: ProductsViewModel,
     navController: NavController
 ) {
     Surface(

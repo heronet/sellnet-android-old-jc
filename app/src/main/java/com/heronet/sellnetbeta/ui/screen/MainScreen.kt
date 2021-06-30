@@ -1,6 +1,6 @@
 package com.heronet.sellnetbeta.ui.screen
 
-import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.*
 import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ShoppingCart
@@ -9,19 +9,23 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavDestination.Companion.hierarchy
 import androidx.navigation.NavGraph.Companion.findStartDestination
-import androidx.navigation.NavType
-import androidx.navigation.compose.*
+import androidx.navigation.compose.currentBackStackEntryAsState
+import androidx.navigation.compose.rememberNavController
+import com.heronet.sellnetbeta.ui.navigation.NavHostContainer
 import com.heronet.sellnetbeta.ui.navigation.Screen
+import com.heronet.sellnetbeta.viewmodel.AuthViewModel
 import com.heronet.sellnetbeta.viewmodel.ProductsViewModel
 import kotlinx.coroutines.launch
 
 @Composable
-fun MainScreen(viewModel: ProductsViewModel) {
+fun MainScreen(productsViewModel: ProductsViewModel, authViewModel: AuthViewModel) {
     val coroutineScope = rememberCoroutineScope()
     val scaffoldState = rememberScaffoldState()
     val navController = rememberNavController()
@@ -30,6 +34,9 @@ fun MainScreen(viewModel: ProductsViewModel) {
             Screen.Products
         )
     }
+    val isTokenRefreshing by remember { authViewModel.isRefreshing }
+    val authErrorText by remember { authViewModel.authErrorText }
+
     Scaffold(
         scaffoldState = scaffoldState,
         topBar = {
@@ -40,23 +47,25 @@ fun MainScreen(viewModel: ProductsViewModel) {
                 Text(text = "Sellnet", fontSize = 20.sp)
             }
         },
-        content = { padding ->
-            NavHost(navController = navController, startDestination = "products", modifier = Modifier.padding(padding)) {
-                composable("products") {
-                    ProductsListScreen(viewModel = viewModel, navController)
+        content = { innerPadding ->
+            when {
+                isTokenRefreshing -> {
+                    Column(
+                        modifier = Modifier.fillMaxSize().padding(innerPadding),
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        verticalArrangement = Arrangement.Center
+                    ) {
+                        CircularProgressIndicator()
+                    }
                 }
-                composable("products/{productId}",
-                    arguments = listOf(
-                        navArgument("productId"){ type = NavType.StringType }
+                // Let users in even if token refresh fails. No internet will be handled by other Screens.
+                else -> {
+                    NavHostContainer(
+                        navController = navController,
+                        productsViewModel = productsViewModel,
+                        authViewModel = authViewModel,
+                        modifier = Modifier.padding(innerPadding)
                     )
-                ) { backStackEntry ->
-                    ProductDetailScreen(
-                        viewModel = viewModel,
-                        productId = backStackEntry.arguments?.getString("productId")!!
-                    )
-                }
-                composable("add-product") {
-                    AddProductScreen(viewModel = viewModel, navController)
                 }
             }
         },

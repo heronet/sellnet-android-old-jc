@@ -36,12 +36,12 @@ import com.heronet.sellnetbeta.viewmodel.ProductsViewModel
 
 @Composable
 fun ProductDetailScreen(
-    viewModel: ProductsViewModel,
+    productsViewModel: ProductsViewModel,
     productId: String,
     modifier: Modifier = Modifier
 ) {
     val product = produceState<Resource<Product>>(initialValue = Resource.Loading()) {
-        value = viewModel.getProduct(productId)
+        value = productsViewModel.getProduct(productId)
     }.value
 
     Surface(color = MaterialTheme.colors.background) {

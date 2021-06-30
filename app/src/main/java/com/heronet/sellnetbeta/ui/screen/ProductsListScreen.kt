@@ -28,13 +28,13 @@ import com.heronet.sellnetbeta.viewmodel.ProductsViewModel
 
 @Composable
 fun ProductsListScreen(
-    viewModel: ProductsViewModel,
+    productsViewModel: ProductsViewModel,
     navController: NavController
 ) {
-    val products by remember { viewModel.products }
-    val isLoading by remember { viewModel.isLoading }
-    val loadError by remember { viewModel.loadError }
-    val productsCount by remember { viewModel.productsCount }
+    val products by remember { productsViewModel.products }
+    val isLoading by remember { productsViewModel.isLoading }
+    val loadError by remember { productsViewModel.loadError }
+    val productsCount by remember { productsViewModel.productsCount }
 
     Surface(color = MaterialTheme.colors.background) {
         Scaffold(
@@ -63,7 +63,7 @@ fun ProductsListScreen(
                         itemsIndexed(products) { index, product: Product ->
                             if (!isLoading) {
                                 if((products.size < productsCount) && (index == products.size - 1)) {
-                                    viewModel.getProducts()
+                                    productsViewModel.getProducts()
                                 }
                             }
                             ItemCard(
