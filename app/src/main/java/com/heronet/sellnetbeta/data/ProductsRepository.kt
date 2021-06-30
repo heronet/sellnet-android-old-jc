@@ -20,4 +20,15 @@ class ProductsRepository @Inject constructor(private val api: SellnetApi) {
         }
         return Resource.Success(productsResponse, null)
     }
+
+    suspend fun getProduct(id: String): Resource<Product> {
+        val product = try {
+            api.getProduct(id)
+        } catch (e: HttpException) {
+            return Resource.Error("An error occurred", null)
+        } catch (e: Exception) {
+            return Resource.Error("No Internet Connection", null)
+        }
+        return Resource.Success(product, null)
+    }
 }

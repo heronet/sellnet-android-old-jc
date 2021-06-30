@@ -28,7 +28,8 @@ fun AddProductScreen(
     viewModel: ProductsViewModel,
     navController: NavController
 ) {
-    Column(
+    Surface(
+        color = MaterialTheme.colors.background,
         modifier = Modifier.fillMaxSize()
     ) {
         Form(modifier = Modifier.padding(8.dp))

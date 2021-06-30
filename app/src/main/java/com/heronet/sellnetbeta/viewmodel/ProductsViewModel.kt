@@ -40,4 +40,7 @@ class ProductsViewModel @Inject constructor(private val repository: ProductsRepo
             }
         }
     }
+    suspend fun getProduct(id: String): Resource<Product> {
+        return repository.getProduct(id)
+    }
 }

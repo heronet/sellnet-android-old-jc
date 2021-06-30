@@ -41,19 +41,18 @@ fun MainScreen(viewModel: ProductsViewModel) {
             }
         },
         content = { padding ->
-            // TODO: Change start destination to "products"
-            NavHost(navController = navController, startDestination = "add-product", modifier = Modifier.padding(padding)) {
+            NavHost(navController = navController, startDestination = "products", modifier = Modifier.padding(padding)) {
                 composable("products") {
                     ProductsListScreen(viewModel = viewModel, navController)
                 }
-                composable("products/{id}",
+                composable("products/{productId}",
                     arguments = listOf(
-                        navArgument("id"){ type = NavType.StringType }
+                        navArgument("productId"){ type = NavType.StringType }
                     )
                 ) { backStackEntry ->
                     ProductDetailScreen(
                         viewModel = viewModel,
-                        backStackEntry.arguments?.getString("id")!!
+                        productId = backStackEntry.arguments?.getString("productId")!!
                     )
                 }
                 composable("add-product") {

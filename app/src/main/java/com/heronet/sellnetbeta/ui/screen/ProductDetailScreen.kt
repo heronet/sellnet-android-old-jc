@@ -1,8 +1,41 @@
 package com.heronet.sellnetbeta.ui.screen
 
+import android.content.Context
+import android.content.Intent
+import android.net.Uri
+import android.widget.Toast
+import androidx.compose.foundation.Image
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.gestures.scrollable
+import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.lazy.LazyRow
+import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.text.selection.SelectionContainer
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.*
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Call
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.produceState
+import androidx.compose.runtime.remember
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.shadow
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
+import com.google.accompanist.coil.rememberCoilPainter
+import com.heronet.sellnetbeta.model.Product
+import com.heronet.sellnetbeta.util.Resource
 import com.heronet.sellnetbeta.viewmodel.ProductsViewModel
+import java.lang.Exception
 
 @Composable
 fun ProductDetailScreen(
@@ -10,5 +43,129 @@ fun ProductDetailScreen(
     productId: String,
     modifier: Modifier = Modifier
 ) {
+    val product = produceState<Resource<Product>>(initialValue = Resource.Loading()) {
+        value = viewModel.getProduct(productId)
+    }.value
 
+    Surface(color = MaterialTheme.colors.background) {
+        when(product) {
+            is Resource.Loading -> {
+                Column(
+                    modifier = Modifier.fillMaxSize(),
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.Center
+                ) {
+                    CircularProgressIndicator()
+                }
+            }
+            is Resource.Error -> {
+                Column(
+                    modifier = Modifier.fillMaxSize(),
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.Center
+                ) {
+                    Text(text = product.message!!)
+                }
+            }
+            is Resource.Success -> {
+                val scrollState = rememberScrollState()
+                Scaffold(
+                    floatingActionButton = {
+                        val context = LocalContext.current
+                        ExtendedFloatingActionButton(
+                            text = { Text(text = "Call") },
+                            onClick = {
+                                makeCall(context = context, product.data!!.supplier.phone)
+                            },
+                            icon = {
+                                Icon(imageVector = Icons.Default.Call, contentDescription = null)
+                            },
+                        )
+                    }
+                ) { innerPadding ->
+                    Column(modifier = Modifier
+                        .padding(horizontal = 8.dp)
+                        .padding(innerPadding)
+                        .verticalScroll(scrollState)) {
+                        Details(product = product.data!!)
+                        Contact(product = product.data)
+                    }
+                }
+            }
+        }
+    }
+}
+
+@Composable
+fun Images(photos: List<Product.Photo>, modifier: Modifier = Modifier) {
+    val photo = remember {
+        mutableStateOf(photos[0])
+    }
+    Column(modifier = modifier, horizontalAlignment = Alignment.CenterHorizontally) {
+        Image(
+            painter = rememberCoilPainter(request = photo.value.imageUrl),
+            contentDescription = photo.value.publicId,
+            modifier = Modifier
+                .fillMaxWidth()
+                .shadow(8.dp),
+            contentScale = ContentScale.Crop
+        )
+        Spacer(modifier = Modifier.padding(4.dp))
+        LazyRow(
+            horizontalArrangement = Arrangement.spacedBy(4.dp)
+        ) {
+            items(photos) { localPhoto ->
+                Image(
+                    painter = rememberCoilPainter(request = localPhoto.imageUrl),
+                    contentDescription = null,
+                    modifier = Modifier
+                        .width(80.dp)
+                        .height(80.dp)
+                        .shadow(8.dp)
+                        .clickable { photo.value = localPhoto },
+                    contentScale = ContentScale.Crop
+                )
+            }
+        }
+    }
+}
+
+@Composable
+fun Details(product: Product) {
+    Spacer(modifier = Modifier.padding(4.dp))
+    Text(text = product.name, fontSize = 24.sp)
+    Text(text = "Posted at ${product.createdAt}", fontSize = 14.sp, style = TextStyle(color = Color.LightGray))
+    Spacer(modifier = Modifier.padding(4.dp))
+    Images(product.photos, modifier = Modifier.fillMaxWidth())
+    Divider(modifier = Modifier.padding(vertical = 8.dp))
+    Text(text = "${product.price} TK", fontSize = 24.sp, style = TextStyle(color = MaterialTheme.colors.primary))
+    Text(text = "${product.city}, ${product.division}", fontSize = 14.sp, modifier = Modifier.padding(vertical = 4.dp))
+    Text(text = "Description", fontSize = 24.sp, modifier = Modifier.padding(vertical = 4.dp))
+    Divider()
+    Text(text = product.description, modifier = Modifier.padding(vertical = 4.dp))
+}
+
+@Composable
+fun Contact(product: Product) {
+    Text(text = "Seller Information", fontSize = 24.sp, modifier = Modifier.padding(vertical = 4.dp))
+    Divider()
+    SelectionContainer {
+        Column {
+            Text(text = product.supplier.name, modifier = Modifier.padding(vertical = 4.dp))
+            Text(text = "Phone: ${product.supplier.phone}")
+            Text(text = "Email: ${product.supplier.email}", modifier = Modifier.padding(vertical = 4.dp))
+            Spacer(modifier = Modifier.padding(vertical = 4.dp))
+        }
+    }
+
+}
+
+fun makeCall(context: Context, number: String) {
+    try {
+        val intent = Intent(Intent.ACTION_DIAL)
+        intent.data = Uri.parse("tel:$number")
+        context.startActivity(intent)
+    } catch (e: Exception) {
+        Toast.makeText(context, "Can't call number", Toast.LENGTH_SHORT).show()
+    }
 }

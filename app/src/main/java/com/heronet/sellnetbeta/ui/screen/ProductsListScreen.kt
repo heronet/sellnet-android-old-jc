@@ -1,6 +1,7 @@
 package com.heronet.sellnetbeta.ui.screen
 
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
@@ -38,52 +39,59 @@ fun ProductsListScreen(
     val loadError by remember { viewModel.loadError }
     val productsCount by remember { viewModel.productsCount }
 
-    Scaffold(
-        content = {
-            if (isLoading && products.isEmpty()) {
-                Column(
-                    modifier = Modifier
-                        .fillMaxSize(),
-                    horizontalAlignment = Alignment.CenterHorizontally,
-                    verticalArrangement = Arrangement.Center
-                ) {
-                    CircularProgressIndicator()
+    Surface(color = MaterialTheme.colors.background) {
+        Scaffold(
+            content = {
+                if (isLoading && products.isEmpty()) {
+                    Column(
+                        modifier = Modifier
+                            .fillMaxSize(),
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        verticalArrangement = Arrangement.Center
+                    ) {
+                        CircularProgressIndicator()
+                    }
+                } else if (loadError.isNotBlank()) {
+                    Column(
+                        modifier = Modifier
+                            .fillMaxSize(),
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        verticalArrangement = Arrangement.Center
+                    ) {
+                        Text(text = loadError)
+                    }
                 }
-            } else if (loadError.isNotBlank()) {
-                Column(
-                    modifier = Modifier
-                        .fillMaxSize(),
-                    horizontalAlignment = Alignment.CenterHorizontally,
-                    verticalArrangement = Arrangement.Center
-                ) {
-                    Text(text = loadError)
-                }
-            }
-            else {
-                LazyColumn {
-                    itemsIndexed(products) { index, product: Product ->
-                        if (!isLoading) {
-                            if((products.size < productsCount) && (index == products.size - 1)) {
-                                viewModel.getProducts()
+                else {
+                    LazyColumn {
+                        itemsIndexed(products) { index, product: Product ->
+                            if (!isLoading) {
+                                if((products.size < productsCount) && (index == products.size - 1)) {
+                                    viewModel.getProducts()
+                                }
                             }
+                            ItemCard(
+                                product = product,
+                                modifier = Modifier
+                                    .padding(4.dp)
+                                    .clickable { navController.navigate("products/${product.id}") }
+                            )
                         }
-                        ItemCard(product = product, modifier = Modifier.padding(4.dp))
                     }
                 }
+            },
+            floatingActionButton = {
+                FloatingActionButton(
+                    onClick = {
+                        navController.navigate("add-product") {
+                            launchSingleTop = true
+                        }
+                    },
+                ) {
+                    Icon(imageVector = Icons.Default.Add, contentDescription = "Add")
+                }
             }
-        },
-        floatingActionButton = {
-            FloatingActionButton(
-                onClick = {
-                    navController.navigate("add-product") {
-                        launchSingleTop = true
-                    }
-                },
-            ) {
-                Icon(imageVector = Icons.Default.Add, contentDescription = "Add")
-            }
-        }
-    )
+        )
+    }
 }
 
 @Composable
@@ -101,7 +109,7 @@ fun ItemCard(
     Card(
         modifier = modifier.fillMaxWidth(),
         shape = RoundedCornerShape(4.dp),
-        elevation = 8.dp
+        elevation = 8.dp,
     ) {
         Row {
             Image(
