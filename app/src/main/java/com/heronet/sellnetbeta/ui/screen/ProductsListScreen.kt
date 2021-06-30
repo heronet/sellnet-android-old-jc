@@ -31,8 +31,7 @@ import java.text.SimpleDateFormat
 @Composable
 fun ProductsListScreen(
     viewModel: ProductsViewModel,
-    navController: NavController,
-    modifier: Modifier = Modifier
+    navController: NavController
 ) {
     val products by remember { viewModel.products }
     val isLoading by remember { viewModel.isLoading }
@@ -62,7 +61,7 @@ fun ProductsListScreen(
                     }
                 }
                 else {
-                    LazyColumn {
+                    LazyColumn(contentPadding = PaddingValues(vertical = 4.dp, horizontal = 8.dp)) {
                         itemsIndexed(products) { index, product: Product ->
                             if (!isLoading) {
                                 if((products.size < productsCount) && (index == products.size - 1)) {
@@ -72,7 +71,7 @@ fun ProductsListScreen(
                             ItemCard(
                                 product = product,
                                 modifier = Modifier
-                                    .padding(4.dp)
+                                    .padding(vertical = 4.dp)
                                     .clickable { navController.navigate("products/${product.id}") }
                             )
                         }

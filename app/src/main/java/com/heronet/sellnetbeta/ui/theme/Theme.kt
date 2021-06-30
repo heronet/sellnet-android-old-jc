@@ -52,7 +52,7 @@ fun SellnetBetaTheme(
     content: @Composable() () -> Unit
 ) {
     val colors = if (darkTheme) {
-        DarkColorPalette
+        LightColorPalette // Temporarily Disable Dark Theme
     } else {
         LightColorPalette
     }
