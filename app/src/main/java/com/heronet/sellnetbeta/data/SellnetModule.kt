@@ -15,7 +15,7 @@ import javax.inject.Singleton
 object SellnetModule {
     @Singleton
     @Provides
-    fun provideSellnetApi() = Retrofit.Builder()
+    fun provideSellnetApi(): SellnetApi = Retrofit.Builder()
         .addConverterFactory(GsonConverterFactory.create())
         .baseUrl(API_URL)
         .build()

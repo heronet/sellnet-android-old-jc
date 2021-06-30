@@ -15,17 +15,15 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import com.google.accompanist.coil.rememberCoilPainter
-import com.heronet.sellnetbeta.R
 import com.heronet.sellnetbeta.model.Product
+import com.heronet.sellnetbeta.util.DateParser
 import com.heronet.sellnetbeta.viewmodel.ProductsViewModel
-import java.text.SimpleDateFormat
 
 
 @Composable
@@ -98,13 +96,7 @@ fun ItemCard(
     product: Product,
     modifier: Modifier = Modifier
 ) {
-    val parser = remember {
-        SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss")
-    }
-    val formatter = remember {
-        SimpleDateFormat("dd-MM-yyyy HH:mm a")
-    }
-    val date = formatter.format(parser.parse(product.createdAt)!!)
+    val date = DateParser.getFormattedDate(product.createdAt)
     Card(
         modifier = modifier.fillMaxWidth(),
         shape = RoundedCornerShape(4.dp),

@@ -1,6 +1,5 @@
 package com.heronet.sellnetbeta.data
 
-import android.util.Log
 import com.heronet.sellnetbeta.model.Product
 import com.heronet.sellnetbeta.util.Resource
 import com.heronet.sellnetbeta.web.ApiResponse
