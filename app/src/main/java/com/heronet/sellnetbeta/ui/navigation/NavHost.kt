@@ -24,11 +24,11 @@ fun NavHostContainer(
     authViewModel: AuthViewModel,
     modifier: Modifier = Modifier,
 ) {
-    NavHost(navController = navController, startDestination = "products", modifier = modifier) {
-        composable("products") {
+    NavHost(navController = navController, startDestination = Screen.Products.route, modifier = modifier) {
+        composable(Screen.Products.route) {
             ProductsListScreen(productsViewModel = productsViewModel, navController)
         }
-        composable("products/{productId}",
+        composable("${Screen.Products.route}/{productId}",
             arguments = listOf(
                 navArgument("productId"){ type = NavType.StringType }
             )
@@ -38,39 +38,39 @@ fun NavHostContainer(
                 productId = backStackEntry.arguments?.getString("productId")!!
             )
         }
-        composable("add-product") {
+        composable(Screen.AddProduct.route) {
             when(authViewModel.authStatus.value) {
                 is AuthStatus.Authenticated -> {
                     AddProductScreen(productsViewModel = productsViewModel, navController)
                 }
                 is AuthStatus.Unauthenticated -> {
-                    LoginScreen(
-                        navController = navController,
-                        authViewModel = authViewModel
-                    )
+                    navController.navigate(Screen.Login.route) {
+                        popUpTo(Screen.AddProduct.route) { inclusive = true }
+                        launchSingleTop = true
+                    }
                 }
             }
         }
-        composable("login") {
+        composable(Screen.Login.route) {
             when(authViewModel.authStatus.value) {
                 is AuthStatus.Unauthenticated -> {
                     LoginScreen(navController = navController, authViewModel = authViewModel)
                 }
                 is AuthStatus.Authenticated -> { // Prevent LoginScreen access if authenticated
-                    navController.navigate("products") {
+                    navController.navigate(Screen.Products.route) {
                         popUpTo(navController.graph.findStartDestination().id) { inclusive = true }
                         launchSingleTop = true
                     }
                 }
             }
         }
-        composable("register") {
+        composable(Screen.Register.route) {
             when(authViewModel.authStatus.value) {
                 is AuthStatus.Unauthenticated -> {
                     RegisterScreen(navController = navController, authViewModel = authViewModel)
                 }
                 is AuthStatus.Authenticated -> { // Prevent RegisterScreen access if authenticated
-                    navController.navigate("products") {
+                    navController.navigate(Screen.Products.route) {
                         popUpTo(navController.graph.findStartDestination().id) { inclusive = true }
                         launchSingleTop = true
                     }

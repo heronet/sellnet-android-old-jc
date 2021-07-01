@@ -1,19 +1,21 @@
 package com.heronet.sellnetbeta.ui.screen
 
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.padding
 import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.Login
 import androidx.compose.material.icons.filled.ShoppingCart
-import androidx.compose.material.icons.rounded.Menu
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavDestination.Companion.hierarchy
 import androidx.navigation.NavGraph.Companion.findStartDestination
@@ -25,15 +27,13 @@ import com.heronet.sellnetbeta.ui.navigation.Screen
 import com.heronet.sellnetbeta.util.AuthStatus
 import com.heronet.sellnetbeta.viewmodel.AuthViewModel
 import com.heronet.sellnetbeta.viewmodel.ProductsViewModel
-import kotlinx.coroutines.launch
 
 @Composable
 fun MainScreen(productsViewModel: ProductsViewModel, authViewModel: AuthViewModel) {
-    val coroutineScope = rememberCoroutineScope()
     val scaffoldState = rememberScaffoldState()
     val navController = rememberNavController()
     val navDestinations = remember {
-        listOf<Screen>(
+        listOf(
             Screen.Products,
             Screen.Login
         )
@@ -50,10 +50,46 @@ fun MainScreen(productsViewModel: ProductsViewModel, authViewModel: AuthViewMode
         scaffoldState = scaffoldState,
         topBar = {
             TopAppBar {
-                IconButton(onClick = { coroutineScope.launch { scaffoldState.drawerState.open() } }) {
-                    Icon(imageVector = Icons.Rounded.Menu, contentDescription = "Drawer")
+                val navBackStackEntry by navController.currentBackStackEntryAsState()
+                when(navBackStackEntry?.destination?.route) {
+                    Screen.Products.route -> {
+                        Text(
+                            text = stringResource(id = Screen.Products.resourceId),
+                            fontSize = 20.sp,
+                            modifier = Modifier.padding(horizontal = 8.dp)
+                        )
+                    }
+                    "${Screen.Products.route}/{productId}" -> {
+                        IconButton(onClick = { navController.popBackStack() }) {
+                            Icon(imageVector = Icons.Default.ArrowBack, contentDescription = null)
+                        }
+                        Text(text = stringResource(id = Screen.Products.resourceId), fontSize = 20.sp)
+                    }
+                    Screen.AddProduct.route -> {
+                        IconButton(onClick = { navController.popBackStack() }) {
+                            Icon(imageVector = Icons.Default.ArrowBack, contentDescription = null)
+                        }
+                        Text(text = stringResource(id = Screen.AddProduct.resourceId), fontSize = 20.sp)
+                    }
+                    Screen.Login.route -> {
+                        IconButton(onClick = { navController.popBackStack() }) {
+                            Icon(imageVector = Icons.Default.ArrowBack, contentDescription = null)
+                        }
+                        Text(text = stringResource(id = Screen.Login.resourceId), fontSize = 20.sp)
+                    }
+                    Screen.Register.route -> {
+                        IconButton(onClick = { navController.popBackStack() }) {
+                            Icon(imageVector = Icons.Default.ArrowBack, contentDescription = null)
+                        }
+                        Text(text = stringResource(id = Screen.Register.resourceId), fontSize = 20.sp)
+                    }
+                    else -> {
+                        IconButton(onClick = { navController.popBackStack() }) {
+                            Icon(imageVector = Icons.Default.ArrowBack, contentDescription = null)
+                        }
+                        Text(text = "Sellnet", fontSize = 20.sp)
+                    }
                 }
-                Text(text = "Sellnet", fontSize = 20.sp)
             }
         },
         content = { innerPadding ->
@@ -79,9 +115,6 @@ fun MainScreen(productsViewModel: ProductsViewModel, authViewModel: AuthViewMode
                     )
                 }
             }
-        },
-        drawerContent = {
-            DrawerScreen()
         },
         bottomBar = {
             if (showBottomNav(navController = navController)) {
@@ -125,3 +158,4 @@ fun showBottomNav(navController: NavHostController): Boolean {
     val currentDestination = navBackStackEntry?.destination
     return currentDestination?.hierarchy?.any { it.route == Screen.Products.route || it.route == Screen.Login.route } == true
 }
+

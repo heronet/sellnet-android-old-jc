@@ -11,6 +11,7 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
@@ -31,10 +32,9 @@ fun LoginScreen(
         val isLoading by remember { authViewModel.isLoading }
         val authErrorText by remember { authViewModel.errorText }
 
-
         Column(modifier = Modifier
             .fillMaxSize()
-            .padding(8.dp)) {
+            .padding(horizontal = 8.dp)) {
             OutlinedErrorTextField(
                 value = email,
                 placeholder = { Text(text =  "Your Email") },
