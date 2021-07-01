@@ -4,7 +4,7 @@ import androidx.datastore.preferences.core.stringPreferencesKey
 
 object Constants {
     const val API_URL = "https://sellnetx-ngmbdouzbq-uc.a.run.app/api/"
-    const val PAGE_SIZE = 8
+    const val PAGE_SIZE = 20
 
     val TOKEN by lazy { stringPreferencesKey("token") }
     val ID by lazy { stringPreferencesKey("id") }

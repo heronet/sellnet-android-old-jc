@@ -1,7 +1,9 @@
 package com.heronet.sellnetbeta.viewmodel
 
 import android.content.Context
+import android.util.Log
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.ui.text.toLowerCase
 import androidx.datastore.preferences.core.edit
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -14,11 +16,15 @@ import com.heronet.sellnetbeta.util.Constants.NAME
 import com.heronet.sellnetbeta.util.Constants.ROLE
 import com.heronet.sellnetbeta.util.Constants.TOKEN
 import com.heronet.sellnetbeta.util.Resource
+import com.heronet.sellnetbeta.web.Location
 import com.heronet.sellnetbeta.web.LoginDto
+import com.heronet.sellnetbeta.web.RegisterDto
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
+import java.util.*
 import javax.inject.Inject
 
 @HiltViewModel
@@ -28,8 +34,11 @@ class AuthViewModel @Inject constructor(
 ): ViewModel() {
     var authStatus = mutableStateOf<AuthStatus>(AuthStatus.Unauthenticated())
     var isLoading = mutableStateOf(false)
+    var isLocationsLoading = mutableStateOf(false)
     var isRefreshing = mutableStateOf(false)
-    var authErrorText = mutableStateOf("")
+    var errorText = mutableStateOf("")
+    var registerErrorMessages = mutableStateOf(mapOf<String, String>())
+    var locations = mutableStateOf<Location?>(null)
 
     init {
         refreshToken()
@@ -41,6 +50,31 @@ class AuthViewModel @Inject constructor(
         viewModelScope.launch {
             val resource = repository.loginUser(loginDto)
             setAuthData(resource)
+        }
+    }
+    fun registerUser(name: String, email: String, password: String, phone: String, city: String, division: String) {
+        isLoading.value = true
+        val registerDto = RegisterDto(name, email, phone, password,
+            city.lowercase(Locale.getDefault()), division.lowercase(Locale.getDefault()))
+        viewModelScope.launch {
+            val resource = repository.registerUser(registerDto)
+            setAuthData(resource)
+        }
+    }
+    fun getLocations() {
+        isLocationsLoading.value = true
+        viewModelScope.launch {
+            when(val resource = repository.getLocations()) {
+                is Resource.Error -> {
+                    isLocationsLoading.value = false
+                    errorText.value = resource.message!!
+                }
+                is Resource.Success -> {
+                    locations.value = resource.data!!
+                    isLocationsLoading.value = false
+                    errorText.value = ""
+                }
+            }
         }
     }
     private fun refreshToken() {
@@ -68,11 +102,14 @@ class AuthViewModel @Inject constructor(
             is Resource.Error -> {
                 isLoading.value = false
                 authStatus.value = AuthStatus.Unauthenticated()
-                authErrorText.value = resource.message!!
+                errorText.value = resource.message!!
+                if (resource.messages != null) { // Used for register
+                    registerErrorMessages.value = getErrorMap(resource.messages)
+                }
             }
             is Resource.Success -> {
                 isLoading.value = false
-                authErrorText.value = ""
+                errorText.value = ""
                 authStatus.value = AuthStatus.Authenticated(authData = resource.data!!)
 
                 context.dataStore.edit { authData ->
@@ -82,8 +119,28 @@ class AuthViewModel @Inject constructor(
                     authData[ROLE] = authStatus.value.authData!!.roles[0]
                 }
 
+                // Also, reset the locations list to save memory
+                resetLocations()
             }
             is Resource.Loading -> {}
         }
+    }
+    private fun resetLocations() {
+        locations.value = null
+    }
+    private fun getErrorMap(messages: List<String>): MutableMap<String, String> {
+        val errors = mutableMapOf<String, String>()
+        messages.forEach {
+            if (it.contains("Email")) {
+                errors["Email"] = it
+            }
+            if (it.contains("Password")) {
+                errors["Password"] = it
+            }
+            if (it.contains("Phone")) {
+                errors["Phone"] = it
+            }
+        }
+        return errors
     }
 }

@@ -3,6 +3,7 @@ package com.heronet.sellnetbeta.ui.screen
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Login
 import androidx.compose.material.icons.filled.ShoppingCart
 import androidx.compose.material.icons.rounded.Menu
 import androidx.compose.runtime.Composable
@@ -21,6 +22,7 @@ import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import com.heronet.sellnetbeta.ui.navigation.NavHostContainer
 import com.heronet.sellnetbeta.ui.navigation.Screen
+import com.heronet.sellnetbeta.util.AuthStatus
 import com.heronet.sellnetbeta.viewmodel.AuthViewModel
 import com.heronet.sellnetbeta.viewmodel.ProductsViewModel
 import kotlinx.coroutines.launch
@@ -32,7 +34,14 @@ fun MainScreen(productsViewModel: ProductsViewModel, authViewModel: AuthViewMode
     val navController = rememberNavController()
     val navDestinations = remember {
         listOf<Screen>(
-            Screen.Products
+            Screen.Products,
+            Screen.Login
+        )
+    }
+    val navIcons = remember {
+        mapOf(
+            Screen.Products.route to Icons.Filled.ShoppingCart,
+            Screen.Login.route to Icons.Filled.Login,
         )
     }
     val isTokenRefreshing by remember { authViewModel.isRefreshing }
@@ -79,11 +88,18 @@ fun MainScreen(productsViewModel: ProductsViewModel, authViewModel: AuthViewMode
                 BottomNavigation {
                     val navBackStackEntry by navController.currentBackStackEntryAsState()
                     val currentDestination = navBackStackEntry?.destination
-                    navDestinations.forEach { screen ->
+                    navDestinations.filter {
+                        when(authViewModel.authStatus.value) {
+                            is AuthStatus.Authenticated -> {
+                                it.route != Screen.Login.route
+                            }
+                            else -> it == it
+                        }
+                    }.forEach { screen ->
                         BottomNavigationItem(
                             icon = { Icon(
-                                imageVector = Icons.Filled.ShoppingCart,
-                                contentDescription = "Cart Icon"
+                                imageVector = navIcons[screen.route]!!,
+                                contentDescription = null
                             )},
                             label = { Text(text = stringResource(id = screen.resourceId)) },
                             selected = currentDestination?.hierarchy?.any { it.route == screen.route } == true,
@@ -100,7 +116,6 @@ fun MainScreen(productsViewModel: ProductsViewModel, authViewModel: AuthViewMode
                     }
                 }
             }
-
         }
     )
 }
@@ -108,5 +123,5 @@ fun MainScreen(productsViewModel: ProductsViewModel, authViewModel: AuthViewMode
 fun showBottomNav(navController: NavHostController): Boolean {
     val navBackStackEntry by navController.currentBackStackEntryAsState()
     val currentDestination = navBackStackEntry?.destination
-    return currentDestination?.hierarchy?.any { it.route == Screen.Products.route } == true
+    return currentDestination?.hierarchy?.any { it.route == Screen.Products.route || it.route == Screen.Login.route } == true
 }

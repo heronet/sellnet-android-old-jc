@@ -2,6 +2,7 @@ package com.heronet.sellnetbeta.ui.navigation
 
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.NavHostController
 import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
@@ -11,6 +12,7 @@ import com.heronet.sellnetbeta.ui.screen.AddProductScreen
 import com.heronet.sellnetbeta.ui.screen.ProductDetailScreen
 import com.heronet.sellnetbeta.ui.screen.ProductsListScreen
 import com.heronet.sellnetbeta.ui.screen.authentication.LoginScreen
+import com.heronet.sellnetbeta.ui.screen.authentication.RegisterScreen
 import com.heronet.sellnetbeta.util.AuthStatus
 import com.heronet.sellnetbeta.viewmodel.AuthViewModel
 import com.heronet.sellnetbeta.viewmodel.ProductsViewModel
@@ -55,7 +57,23 @@ fun NavHostContainer(
                     LoginScreen(navController = navController, authViewModel = authViewModel)
                 }
                 is AuthStatus.Authenticated -> { // Prevent LoginScreen access if authenticated
-                    ProductsListScreen(productsViewModel = productsViewModel, navController)
+                    navController.navigate("products") {
+                        popUpTo(navController.graph.findStartDestination().id) { inclusive = true }
+                        launchSingleTop = true
+                    }
+                }
+            }
+        }
+        composable("register") {
+            when(authViewModel.authStatus.value) {
+                is AuthStatus.Unauthenticated -> {
+                    RegisterScreen(navController = navController, authViewModel = authViewModel)
+                }
+                is AuthStatus.Authenticated -> { // Prevent RegisterScreen access if authenticated
+                    navController.navigate("products") {
+                        popUpTo(navController.graph.findStartDestination().id) { inclusive = true }
+                        launchSingleTop = true
+                    }
                 }
             }
         }

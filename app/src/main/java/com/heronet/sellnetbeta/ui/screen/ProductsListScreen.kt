@@ -1,22 +1,27 @@
 package com.heronet.sellnetbeta.ui.screen
 
+import android.widget.Toast
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.KeyboardActions
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.remember
+import androidx.compose.material.icons.filled.Search
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
@@ -59,35 +64,37 @@ fun ProductsListScreen(
                     ) {
                         Text(text = loadError)
                     }
-                }
-                else {
-                    LazyColumn(contentPadding = PaddingValues(vertical = 4.dp, horizontal = 8.dp)) {
-                        itemsIndexed(products) { index, product: Product ->
-                            if (!isLoading) {
-                                if((products.size < productsCount) && (index == products.size - 1)) {
-                                    productsViewModel.getProducts()
+                } else {
+                    Column {
+                        SearchBar(modifier = Modifier.padding(bottom = 8.dp, start = 8.dp, end = 8.dp))
+                        LazyColumn(contentPadding = PaddingValues(vertical = 4.dp, horizontal = 8.dp)) {
+                            itemsIndexed(products) { index, product: Product ->
+                                if (!isLoading) {
+                                    if ((products.size < productsCount) && (index == products.size - 1)) {
+                                        productsViewModel.getProducts()
+                                    }
                                 }
+                                ItemCard(
+                                    product = product,
+                                    modifier = Modifier
+                                        .padding(vertical = 4.dp)
+                                        .clickable { navController.navigate("products/${product.id}") }
+                                )
                             }
-                            ItemCard(
-                                product = product,
-                                modifier = Modifier
-                                    .padding(vertical = 4.dp)
-                                    .clickable { navController.navigate("products/${product.id}") }
-                            )
                         }
                     }
                 }
             },
             floatingActionButton = {
-                FloatingActionButton(
+                ExtendedFloatingActionButton(
                     onClick = {
                         navController.navigate("add-product") {
                             launchSingleTop = true
                         }
                     },
-                ) {
-                    Icon(imageVector = Icons.Default.Add, contentDescription = "Add")
-                }
+                    text = { Text(text = "Add") },
+                    icon = { Icon(imageVector = Icons.Default.Add, contentDescription = "Add") }
+                )
             }
         )
     }
@@ -107,8 +114,8 @@ fun ItemCard(
         Row {
             Box(
                 modifier = Modifier
-                .height(130.dp)
-                .width(130.dp)
+                    .height(130.dp)
+                    .width(130.dp)
             ) {
                 val painter = rememberCoilPainter(
                     request = product.thumbnail.imageUrl,
@@ -136,7 +143,8 @@ fun ItemCard(
                     is ImageLoadState.Error -> {
                         // Display some content if the request fails
                     }
-                    else -> {}
+                    else -> {
+                    }
                 }
             }
 
@@ -155,4 +163,22 @@ fun ItemCard(
             }
         }
     }
+}
+
+@Composable
+fun SearchBar(modifier: Modifier = Modifier) {
+    var search by remember { mutableStateOf("") }
+    val context = LocalContext.current
+    OutlinedTextField(
+        value = search,
+        onValueChange = {search = it},
+        label = { Text(text = "Search") },
+        placeholder = { Text(text = "What are you looking for?") },
+        modifier = modifier.fillMaxWidth(),
+        trailingIcon = {
+            Icon(imageVector = Icons.Default.Search, contentDescription = null)
+        },
+        singleLine = true,
+        keyboardActions = KeyboardActions(onDone = { Toast.makeText(context, search, Toast.LENGTH_SHORT).show()})
+    )
 }

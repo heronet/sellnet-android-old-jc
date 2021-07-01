@@ -17,6 +17,12 @@ interface SellnetApi {
     @POST("account/login")
     suspend fun login(@Body loginDto: LoginDto): AuthData
 
+    @POST("account/register")
+    suspend fun register(@Body registerDto: RegisterDto): AuthData
+
     @POST("account/refresh")
     suspend fun refreshToken(@Header("Authorization") authorization: String, @Body authData: AuthData): AuthData
+
+    @GET("utilities/locations")
+    suspend fun getLocations(): Location
 }

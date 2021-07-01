@@ -41,8 +41,7 @@ import com.heronet.sellnetbeta.viewmodel.ProductsViewModel
 @Composable
 fun ProductDetailScreen(
     productsViewModel: ProductsViewModel,
-    productId: String,
-    modifier: Modifier = Modifier
+    productId: String
 ) {
     val product = produceState<Resource<Product>>(initialValue = Resource.Loading()) {
         value = productsViewModel.getProduct(productId)

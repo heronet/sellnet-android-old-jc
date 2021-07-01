@@ -3,4 +3,5 @@
     <!-- Screen Routes -->
     <string name="products">Products</string>
     <string name="addProduct">Add Product</string>
+    <string name="login">Login</string>
 </resources>
