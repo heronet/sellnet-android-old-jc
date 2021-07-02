@@ -37,7 +37,7 @@ fun ProductsListScreen(
 ) {
     val products by remember { productsViewModel.products }
     val isLoading by remember { productsViewModel.isLoading }
-    val loadError by remember { productsViewModel.loadError }
+    val loadError by remember { productsViewModel.errorMessage }
     val productsCount by remember { productsViewModel.productsCount }
 
     Surface(color = MaterialTheme.colors.background) {

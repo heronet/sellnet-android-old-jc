@@ -2,6 +2,8 @@ package com.heronet.sellnetbeta.web
 
 import com.heronet.sellnetbeta.model.AuthData
 import com.heronet.sellnetbeta.model.Product
+import okhttp3.MultipartBody
+import okhttp3.RequestBody
 import retrofit2.http.*
 
 interface SellnetApi {
@@ -25,4 +27,15 @@ interface SellnetApi {
 
     @GET("utilities/locations")
     suspend fun getLocations(): Location
+
+    @POST("products")
+    @Multipart
+    suspend fun addProduct(
+        @Part("name") name: RequestBody,
+        @Part("price") price: RequestBody,
+        @Part("description") description: RequestBody,
+        @Part("category") category: RequestBody,
+        @Part photos: List<MultipartBody.Part>,
+        @Header("Authorization") authorization: String
+    )
 }

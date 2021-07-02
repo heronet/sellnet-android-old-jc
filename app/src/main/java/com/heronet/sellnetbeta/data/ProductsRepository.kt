@@ -1,10 +1,15 @@
 package com.heronet.sellnetbeta.data
 
+import android.util.Log
 import com.heronet.sellnetbeta.model.Product
 import com.heronet.sellnetbeta.util.Resource
 import com.heronet.sellnetbeta.web.ApiResponse
 import com.heronet.sellnetbeta.web.SellnetApi
+import okhttp3.MultipartBody
+import okhttp3.RequestBody
+import okhttp3.ResponseBody
 import retrofit2.HttpException
+import retrofit2.http.Part
 import java.lang.Exception
 import javax.inject.Inject
 
@@ -30,4 +35,25 @@ class ProductsRepository @Inject constructor(private val api: SellnetApi) {
         }
         return Resource.Success(product, null)
     }
+
+    suspend fun addProduct(
+        name: RequestBody,
+        price: RequestBody,
+        description: RequestBody,
+        category: RequestBody,
+        photos: List<MultipartBody.Part>,
+        token: String
+    ): Resource<Boolean> {
+        return try {
+            api.addProduct(name, price, description, category, photos, token)
+            Resource.Success(true)
+        } catch (e: HttpException) {
+            Log.d("ERR",getError(e.response()!!.errorBody()!!))
+            Resource.Error("An error occurred", null)
+        } catch (e: Exception) {
+            Log.d("ERR", e.toString())
+            Resource.Error("No Internet Connection", null)
+        }
+    }
+    private fun getError(response: ResponseBody) = response.string()
 }

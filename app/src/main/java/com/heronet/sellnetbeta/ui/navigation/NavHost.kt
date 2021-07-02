@@ -41,7 +41,7 @@ fun NavHostContainer(
         composable(Screen.AddProduct.route) {
             when(authViewModel.authStatus.value) {
                 is AuthStatus.Authenticated -> {
-                    AddProductScreen(productsViewModel = productsViewModel, navController)
+                    AddProductScreen(productsViewModel, authViewModel, navController)
                 }
                 is AuthStatus.Unauthenticated -> {
                     navController.navigate(Screen.Login.route) {

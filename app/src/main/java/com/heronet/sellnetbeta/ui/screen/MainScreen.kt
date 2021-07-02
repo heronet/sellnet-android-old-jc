@@ -84,10 +84,7 @@ fun MainScreen(productsViewModel: ProductsViewModel, authViewModel: AuthViewMode
                         Text(text = stringResource(id = Screen.Register.resourceId), fontSize = 20.sp)
                     }
                     else -> {
-                        IconButton(onClick = { navController.popBackStack() }) {
-                            Icon(imageVector = Icons.Default.ArrowBack, contentDescription = null)
-                        }
-                        Text(text = "Sellnet", fontSize = 20.sp)
+                        Text(text = "Sellnet", fontSize = 20.sp, modifier = Modifier.padding(horizontal = 8.dp))
                     }
                 }
             }
