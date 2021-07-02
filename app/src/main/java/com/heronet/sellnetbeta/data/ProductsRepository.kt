@@ -20,6 +20,7 @@ class ProductsRepository @Inject constructor(private val api: SellnetApi) {
         } catch (e: HttpException) {
             return Resource.Error("An error occurred", null)
         } catch (e: Exception) {
+            Log.d("ER", e.toString())
             return Resource.Error("No Internet Connection", null)
         }
         return Resource.Success(productsResponse, null)

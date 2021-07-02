@@ -22,7 +22,9 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
+import androidx.navigation.NavGraph.Companion.findStartDestination
 import com.google.accompanist.coil.rememberCoilPainter
+import com.heronet.sellnetbeta.ui.navigation.Screen
 import com.heronet.sellnetbeta.viewmodel.AuthViewModel
 import com.heronet.sellnetbeta.viewmodel.ProductsViewModel
 
@@ -43,6 +45,8 @@ fun AddProductScreen(
         var category by remember { mutableStateOf("") }
         var categoryExpanded by remember { mutableStateOf(false) }
         val isLoading by remember { productsViewModel.isLoading }
+        var uploadFinished by remember { productsViewModel.uploadFinished }
+
         val categories = remember {
             listOf(
                 "Phones",
@@ -97,13 +101,15 @@ fun AddProductScreen(
                 placeholder = { Text("Describe your item as good as you can")},
                 modifier = Modifier.fillMaxWidth()
             )
-            OutlinedTextField(
-                value = category,
-                onValueChange = { /* Do Nothing */ },
-                enabled = false,
-                label = { Text("Category")},
-                modifier = Modifier.fillMaxWidth()
-            )
+            if (category.isNotBlank()) {
+                OutlinedTextField(
+                    value = category,
+                    onValueChange = { /* Do Nothing */ },
+                    enabled = false,
+                    label = { Text("Category")},
+                    modifier = Modifier.fillMaxWidth()
+                )
+            }
             DropdownMenu(expanded = categoryExpanded, onDismissRequest = { categoryExpanded = false }) {
                 categories.forEach { cat ->
                     DropdownMenuItem(onClick = { category = cat; categoryExpanded = false }) {
@@ -137,6 +143,15 @@ fun AddProductScreen(
             }
             Spacer(modifier = Modifier.height(8.dp))
             PhotosPreview(imageUris, modifier = Modifier.fillMaxWidth())
+        }
+        if (uploadFinished) {
+            // Reset upload status for using with subsequent uploads.
+            productsViewModel.resetUploadStatus()
+            // Go to ProductsScreen
+            navController.navigate(Screen.Products.route) {
+                popUpTo(navController.graph.findStartDestination().id) { inclusive = true }
+                launchSingleTop = true
+            }
         }
     }
 }

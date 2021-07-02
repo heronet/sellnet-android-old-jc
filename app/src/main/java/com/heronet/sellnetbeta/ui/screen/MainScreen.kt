@@ -56,7 +56,7 @@ fun MainScreen(productsViewModel: ProductsViewModel, authViewModel: AuthViewMode
                         Text(
                             text = stringResource(id = Screen.Products.resourceId),
                             fontSize = 20.sp,
-                            modifier = Modifier.padding(horizontal = 8.dp)
+                            modifier = Modifier.padding(horizontal = 16.dp)
                         )
                     }
                     "${Screen.Products.route}/{productId}" -> {
@@ -84,7 +84,7 @@ fun MainScreen(productsViewModel: ProductsViewModel, authViewModel: AuthViewMode
                         Text(text = stringResource(id = Screen.Register.resourceId), fontSize = 20.sp)
                     }
                     else -> {
-                        Text(text = "Sellnet", fontSize = 20.sp, modifier = Modifier.padding(horizontal = 8.dp))
+                        Text(text = "Sellnet", fontSize = 20.sp, modifier = Modifier.padding(horizontal = 16.dp))
                     }
                 }
             }

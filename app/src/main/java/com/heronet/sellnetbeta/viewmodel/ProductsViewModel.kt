@@ -1,5 +1,6 @@
 package com.heronet.sellnetbeta.viewmodel
 
+import android.content.Context
 import android.net.Uri
 import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.ViewModel
@@ -9,7 +10,10 @@ import com.heronet.sellnetbeta.model.Product
 import com.heronet.sellnetbeta.util.Constants.PAGE_SIZE
 import com.heronet.sellnetbeta.util.Resource
 import dagger.hilt.android.lifecycle.HiltViewModel
+import dagger.hilt.android.qualifiers.ApplicationContext
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import okhttp3.MediaType
 import okhttp3.MultipartBody
 import okhttp3.RequestBody
@@ -17,11 +21,16 @@ import java.io.File
 import javax.inject.Inject
 
 @HiltViewModel
-class ProductsViewModel @Inject constructor(private val repository: ProductsRepository): ViewModel() {
+class ProductsViewModel @Inject constructor(
+    private val repository: ProductsRepository,
+    @ApplicationContext private val context: Context
+): ViewModel() {
     var products = mutableStateOf<List<Product>>(listOf())
     var productsCount = mutableStateOf(0)
     var isLoading = mutableStateOf(false)
+    var uploadFinished = mutableStateOf(false)
     var errorMessage = mutableStateOf("")
+
     private var currentPage = 1
 
     init {
@@ -53,10 +62,12 @@ class ProductsViewModel @Inject constructor(private val repository: ProductsRepo
         viewModelScope.launch {
             val images = mutableListOf<MultipartBody.Part>()
             for (uri in uris) {
-                val photo = File(uri!!.path!!)
-                val photoFile = RequestBody.create(MediaType.parse("image/*"), photo)
-                val formData = MultipartBody.Part.createFormData("photos", "photos", photoFile)
-                images.add(formData)
+                withContext(Dispatchers.IO) {
+                    val photo = context.contentResolver.openInputStream(uri!!)?.buffered()?.readBytes()
+                    val photoFile = RequestBody.create(MediaType.parse("image/*"), photo!!)
+                    val formData = MultipartBody.Part.createFormData("photos", "photos", photoFile)
+                    images.add(formData)
+                }
             }
             val productName = RequestBody.create(MultipartBody.FORM, name)
             val productPrice = RequestBody.create(MultipartBody.FORM, price)
@@ -67,12 +78,18 @@ class ProductsViewModel @Inject constructor(private val repository: ProductsRepo
                 is Resource.Error -> {
                     errorMessage.value = response.message!!
                     isLoading.value = false
+                    uploadFinished.value = false
                 }
                 is Resource.Success -> {
                     errorMessage.value = ""
                     isLoading.value = false
+                    uploadFinished.value = true // True will redirect away from AddProduct Screen
                 }
             }
         }
+    }
+    // Reset upload status for using with subsequent uploads.
+    fun resetUploadStatus() {
+        uploadFinished.value = false
     }
 }
