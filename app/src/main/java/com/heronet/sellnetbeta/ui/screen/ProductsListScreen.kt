@@ -62,9 +62,9 @@ fun ProductsListScreen(
                         Text(text = loadError)
                     }
                 } else {
-                    Column {
-                        SearchBar(modifier = Modifier.padding(bottom = 8.dp, start = 8.dp, end = 8.dp))
-                        LazyColumn(contentPadding = PaddingValues(vertical = 4.dp, horizontal = 8.dp)) {
+                    Column(modifier = Modifier.padding(horizontal = 12.dp)) {
+                        SearchBar(modifier = Modifier.padding(bottom = 4.dp))
+                        LazyColumn(contentPadding = PaddingValues(bottom = 4.dp)) {
                             itemsIndexed(products) { index, product: Product ->
                                 if (!isLoading) {
                                     if ((products.size < productsCount) && (index == products.size - 1)) {

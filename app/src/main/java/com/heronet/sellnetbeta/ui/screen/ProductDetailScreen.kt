@@ -84,7 +84,7 @@ fun ProductDetailScreen(
                     }
                 ) { innerPadding ->
                     Column(modifier = Modifier
-                        .padding(horizontal = 8.dp)
+                        .padding(horizontal = 12.dp)
                         .padding(innerPadding)
                         .verticalScroll(scrollState)) {
                         Details(product = product.data!!)
