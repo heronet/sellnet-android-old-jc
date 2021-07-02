@@ -67,7 +67,7 @@ fun NavHostContainer(
         composable(Screen.Register.route) {
             when(authViewModel.authStatus.value) {
                 is AuthStatus.Unauthenticated -> {
-                    RegisterScreen(navController = navController, authViewModel = authViewModel)
+                    RegisterScreen(authViewModel = authViewModel)
                 }
                 is AuthStatus.Authenticated -> { // Prevent RegisterScreen access if authenticated
                     navController.navigate(Screen.Products.route) {

@@ -1,5 +1,5 @@
 <resources>
-    <string name="app_name">Sellnet Beta</string>
+    <string name="app_name">Sellnet</string>
     <!-- Screen Routes -->
     <string name="products">Products</string>
     <string name="addProduct">Add Product</string>

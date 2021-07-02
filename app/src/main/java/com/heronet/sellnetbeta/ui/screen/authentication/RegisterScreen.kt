@@ -21,7 +21,6 @@ import com.heronet.sellnetbeta.viewmodel.AuthViewModel
 
 @Composable
 fun RegisterScreen(
-    navController: NavController,
     authViewModel: AuthViewModel
 ) {
     authViewModel.getLocations()
