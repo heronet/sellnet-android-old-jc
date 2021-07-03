@@ -2,6 +2,7 @@ package com.heronet.sellnetbeta.viewmodel
 
 import android.content.Context
 import android.net.Uri
+import android.util.Log
 import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -23,7 +24,7 @@ import javax.inject.Inject
 class ProductsViewModel @Inject constructor(
     private val repository: ProductsRepository,
     @ApplicationContext private val context: Context
-): ViewModel() {
+) : ViewModel() {
     var products = mutableStateOf<List<Product>>(listOf())
     var productsCount = mutableStateOf(0)
     var isLoading = mutableStateOf(false)
@@ -35,10 +36,32 @@ class ProductsViewModel @Inject constructor(
     init {
         getProducts()
     }
-    fun getProducts() {
+
+    fun getProducts(
+        name: String? = null,
+        city: String? = null,
+        division: String? = null,
+        category: String? = null,
+        sortParam: String? = null,
+        sellerId: String? = null,
+        isFiltering: Boolean? = false
+    ) {
         viewModelScope.launch {
             isLoading.value = true
-            when(val response = repository.getProducts(currentPage, PAGE_SIZE)) {
+
+            // Check if filtering.
+            if (isFiltering == true) currentPage = 1
+
+            when (val response = repository.getProducts(
+                currentPage,
+                PAGE_SIZE,
+                name,
+                city,
+                division,
+                category,
+                sortParam,
+                sellerId
+            )) {
                 is Resource.Error -> {
                     errorMessage.value = response.message!!
                     isLoading.value = false
@@ -46,23 +69,37 @@ class ProductsViewModel @Inject constructor(
                 is Resource.Success -> {
                     productsCount.value = response.data!!.size
                     errorMessage.value = ""
-                    products.value += response.data.data
+                    if (isFiltering == true) // If request is filter query, set products to response
+                        products.value = response.data.data
+                    else // Used for pagination. Request may or may not be filtered.
+                        products.value += response.data.data
                     ++currentPage
                     isLoading.value = false
+                    Log.d("SS", productsCount.value.toString())
                 }
             }
         }
     }
+
     suspend fun getProduct(id: String): Resource<Product> {
         return repository.getProduct(id)
     }
-    fun addProduct(name: String, price: String, description: String, category: String, uris: List<Uri?>, token: String) {
+
+    fun addProduct(
+        name: String,
+        price: String,
+        description: String,
+        category: String,
+        uris: List<Uri?>,
+        token: String
+    ) {
         isLoading.value = true
         viewModelScope.launch {
             val images = mutableListOf<MultipartBody.Part>()
             for (uri in uris) {
                 withContext(Dispatchers.IO) {
-                    val photo = context.contentResolver.openInputStream(uri!!)?.buffered()?.readBytes()
+                    val photo =
+                        context.contentResolver.openInputStream(uri!!)?.buffered()?.readBytes()
                     val photoFile = RequestBody.create(MediaType.parse("image/*"), photo!!)
                     val formData = MultipartBody.Part.createFormData("photos", "photos", photoFile)
                     images.add(formData)
@@ -73,7 +110,14 @@ class ProductsViewModel @Inject constructor(
             val productDescription = RequestBody.create(MultipartBody.FORM, description)
             val productCategory = RequestBody.create(MultipartBody.FORM, category)
 
-            when(val response = repository.addProduct(productName, productPrice, productDescription, productCategory, images, "Bearer $token")) {
+            when (val response = repository.addProduct(
+                productName,
+                productPrice,
+                productDescription,
+                productCategory,
+                images,
+                "Bearer $token"
+            )) {
                 is Resource.Error -> {
                     errorMessage.value = response.message!!
                     isLoading.value = false
@@ -87,8 +131,14 @@ class ProductsViewModel @Inject constructor(
             }
         }
     }
+
     // Reset upload status for using with subsequent uploads.
     fun resetUploadStatus() {
         uploadFinished.value = false
+    }
+
+    // Reset products for query
+    fun resetProducts() {
+        products.value = listOf()
     }
 }

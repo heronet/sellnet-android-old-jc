@@ -103,6 +103,9 @@ class AuthViewModel @Inject constructor(
                 if (resource.messages != null) { // Used for register
                     registerErrorMessages.value = getErrorMap(resource.messages)
                 }
+                if (resource.message == "An error occurred") {
+                    logout()
+                }
             }
             is Resource.Success -> {
                 isLoading.value = false
@@ -121,6 +124,14 @@ class AuthViewModel @Inject constructor(
             }
             is Resource.Loading -> {}
         }
+    }
+    fun logout() {
+        viewModelScope.launch {
+            context.dataStore.edit { authData ->
+                authData.clear()
+            }
+        }
+        authStatus.value = AuthStatus.Unauthenticated()
     }
     private fun resetLocations() {
         locations.value = null

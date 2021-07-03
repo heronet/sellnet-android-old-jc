@@ -1,22 +1,17 @@
 package com.heronet.sellnetbeta.ui.screen
 
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.*
 import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ArrowBack
-import androidx.compose.material.icons.filled.Login
-import androidx.compose.material.icons.filled.ShoppingCart
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.remember
+import androidx.compose.material.icons.filled.*
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.unit.DpOffset
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.navigation.NavBackStackEntry
 import androidx.navigation.NavDestination.Companion.hierarchy
 import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.NavHostController
@@ -35,59 +30,54 @@ fun MainScreen(productsViewModel: ProductsViewModel, authViewModel: AuthViewMode
     val navDestinations = remember {
         listOf(
             Screen.Products,
+            Screen.UserProducts,
             Screen.Login
         )
     }
     val navIcons = remember {
         mapOf(
             Screen.Products.route to Icons.Filled.ShoppingCart,
+            Screen.UserProducts.route to Icons.Filled.MenuBook,
             Screen.Login.route to Icons.Filled.Login,
         )
     }
     val isTokenRefreshing by remember { authViewModel.isRefreshing }
+    val navBackStackEntry by navController.currentBackStackEntryAsState()
+    var menuVisible by remember { mutableStateOf(false) }
 
     Scaffold(
         scaffoldState = scaffoldState,
         topBar = {
-            TopAppBar {
-                val navBackStackEntry by navController.currentBackStackEntryAsState()
-                when(navBackStackEntry?.destination?.route) {
-                    Screen.Products.route -> {
-                        Text(
-                            text = stringResource(id = Screen.Products.resourceId),
-                            fontSize = 20.sp,
-                            modifier = Modifier.padding(horizontal = 16.dp)
-                        )
+            TopAppBar(
+                title = { ToolbarText(navBackStackEntry = navBackStackEntry) },
+                actions = {
+                    IconButton(onClick = { menuVisible = !menuVisible }) {
+                        Icon(Icons.Default.MoreVert, null)
                     }
-                    "${Screen.Products.route}/{productId}" -> {
-                        IconButton(onClick = { navController.popBackStack() }) {
-                            Icon(imageVector = Icons.Default.ArrowBack, contentDescription = null)
+                    DropdownMenu(
+                        expanded = menuVisible,
+                        onDismissRequest = { menuVisible = false }
+                    ) {
+                        when(authViewModel.authStatus.value) {
+                            is AuthStatus.Authenticated -> {
+                                DropdownMenuItem(onClick = { authViewModel.logout() }) {
+                                    Text(text = "Logout")
+                                }
+                            }
+                            else -> {}
                         }
-                        Text(text = stringResource(id = Screen.Products.resourceId), fontSize = 20.sp)
-                    }
-                    Screen.AddProduct.route -> {
-                        IconButton(onClick = { navController.popBackStack() }) {
-                            Icon(imageVector = Icons.Default.ArrowBack, contentDescription = null)
+                        DropdownMenuItem(onClick = {  }) {
+                            Text(text = "About")
                         }
-                        Text(text = stringResource(id = Screen.AddProduct.resourceId), fontSize = 20.sp)
                     }
-                    Screen.Login.route -> {
-                        IconButton(onClick = { navController.popBackStack() }) {
-                            Icon(imageVector = Icons.Default.ArrowBack, contentDescription = null)
-                        }
-                        Text(text = stringResource(id = Screen.Login.resourceId), fontSize = 20.sp)
-                    }
-                    Screen.Register.route -> {
-                        IconButton(onClick = { navController.popBackStack() }) {
-                            Icon(imageVector = Icons.Default.ArrowBack, contentDescription = null)
-                        }
-                        Text(text = stringResource(id = Screen.Register.resourceId), fontSize = 20.sp)
-                    }
-                    else -> {
-                        Text(text = "Sellnet", fontSize = 20.sp, modifier = Modifier.padding(horizontal = 16.dp))
-                    }
+                },
+                navigationIcon = {
+                    ToolbarIcon(
+                        navBackStackEntry = navBackStackEntry,
+                        onClick = { navController.popBackStack() }
+                    )
                 }
-            }
+            )
         },
         content = { innerPadding ->
             when {
@@ -116,14 +106,12 @@ fun MainScreen(productsViewModel: ProductsViewModel, authViewModel: AuthViewMode
         bottomBar = {
             if (showBottomNav(navController = navController)) {
                 BottomNavigation {
-                    val navBackStackEntry by navController.currentBackStackEntryAsState()
                     val currentDestination = navBackStackEntry?.destination
                     navDestinations.filter {
                         when(authViewModel.authStatus.value) {
-                            is AuthStatus.Authenticated -> {
-                                it.route != Screen.Login.route
-                            }
-                            else -> it == it
+                            is AuthStatus.Authenticated -> it.route != Screen.Login.route
+
+                            is AuthStatus.Unauthenticated -> it.route != Screen.UserProducts.route
                         }
                     }.forEach { screen ->
                         BottomNavigationItem(
@@ -153,6 +141,72 @@ fun MainScreen(productsViewModel: ProductsViewModel, authViewModel: AuthViewMode
 fun showBottomNav(navController: NavHostController): Boolean {
     val navBackStackEntry by navController.currentBackStackEntryAsState()
     val currentDestination = navBackStackEntry?.destination
-    return currentDestination?.hierarchy?.any { it.route == Screen.Products.route || it.route == Screen.Login.route } == true
+    return currentDestination?.hierarchy?.any {
+        it.route == Screen.Products.route
+                || it.route == Screen.UserProducts.route
+                || it.route == Screen.Login.route
+    } == true
 }
 
+@Composable
+fun ToolbarIcon(navBackStackEntry: NavBackStackEntry?, onClick: () -> Unit) {
+    when(navBackStackEntry?.destination?.route) {
+        "${Screen.Products.route}/{productId}" -> {
+            IconButton(onClick = onClick) {
+                Icon(imageVector = Icons.Default.ArrowBack, contentDescription = null)
+            }
+        }
+        Screen.AddProduct.route -> {
+            IconButton(onClick = onClick) {
+                Icon(imageVector = Icons.Default.ArrowBack, contentDescription = null)
+            }
+        }
+        Screen.UserProducts.route -> {
+            IconButton(onClick = onClick) {
+                Icon(imageVector = Icons.Default.ArrowBack, contentDescription = null)
+            }
+        }
+        Screen.Login.route -> {
+            IconButton(onClick = onClick) {
+                Icon(imageVector = Icons.Default.ArrowBack, contentDescription = null)
+            }
+        }
+        Screen.Register.route -> {
+            IconButton(onClick = onClick) {
+                Icon(imageVector = Icons.Default.ArrowBack, contentDescription = null)
+            }
+        }
+        else -> IconButton(onClick = { /*TODO*/ }) {
+            Icon(imageVector = Icons.Default.Store, contentDescription = null)
+        }
+    }
+}
+@Composable
+fun ToolbarText(navBackStackEntry: NavBackStackEntry?) {
+    when(navBackStackEntry?.destination?.route) {
+        Screen.Products.route -> {
+            Text(
+                text = stringResource(id = Screen.Products.resourceId),
+                fontSize = 20.sp
+            )
+        }
+        "${Screen.Products.route}/{productId}" -> {
+            Text(text = stringResource(id = Screen.Products.resourceId), fontSize = 20.sp)
+        }
+        Screen.AddProduct.route -> {
+            Text(text = stringResource(id = Screen.AddProduct.resourceId), fontSize = 20.sp)
+        }
+        Screen.UserProducts.route -> {
+            Text(text = stringResource(id = Screen.UserProducts.resourceId), fontSize = 20.sp)
+        }
+        Screen.Login.route -> {
+            Text(text = stringResource(id = Screen.Login.resourceId), fontSize = 20.sp)
+        }
+        Screen.Register.route -> {
+            Text(text = stringResource(id = Screen.Register.resourceId), fontSize = 20.sp)
+        }
+        else -> {
+            Text(text = "Sellnet", fontSize = 20.sp, modifier = Modifier.padding(horizontal = 16.dp))
+        }
+    }
+}

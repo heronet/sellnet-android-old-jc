@@ -11,6 +11,7 @@ import androidx.navigation.compose.navArgument
 import com.heronet.sellnetbeta.ui.screen.AddProductScreen
 import com.heronet.sellnetbeta.ui.screen.ProductDetailScreen
 import com.heronet.sellnetbeta.ui.screen.ProductsListScreen
+import com.heronet.sellnetbeta.ui.screen.UserProductsScreen
 import com.heronet.sellnetbeta.ui.screen.authentication.LoginScreen
 import com.heronet.sellnetbeta.ui.screen.authentication.RegisterScreen
 import com.heronet.sellnetbeta.util.AuthStatus
@@ -26,7 +27,7 @@ fun NavHostContainer(
 ) {
     NavHost(navController = navController, startDestination = Screen.Products.route, modifier = modifier) {
         composable(Screen.Products.route) {
-            ProductsListScreen(productsViewModel = productsViewModel, navController)
+            ProductsListScreen(productsViewModel = productsViewModel, authViewModel = authViewModel, navController)
         }
         composable("${Screen.Products.route}/{productId}",
             arguments = listOf(
@@ -46,6 +47,19 @@ fun NavHostContainer(
                 is AuthStatus.Unauthenticated -> {
                     navController.navigate(Screen.Login.route) {
                         popUpTo(Screen.AddProduct.route) { inclusive = true }
+                        launchSingleTop = true
+                    }
+                }
+            }
+        }
+        composable(Screen.UserProducts.route) {
+            when(authViewModel.authStatus.value) {
+                is AuthStatus.Authenticated -> {
+                    UserProductsScreen(productsViewModel)
+                }
+                is AuthStatus.Unauthenticated -> {
+                    navController.navigate(Screen.Login.route) {
+                        popUpTo(navController.graph.findStartDestination().id) { inclusive = true }
                         launchSingleTop = true
                     }
                 }

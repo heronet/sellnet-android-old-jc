@@ -12,9 +12,27 @@ import retrofit2.HttpException
 import javax.inject.Inject
 
 class ProductsRepository @Inject constructor(private val api: SellnetApi) {
-    suspend fun getProducts(pageNumber: Int, pageSize: Int): Resource<ApiResponse<List<Product>>> {
+    suspend fun getProducts(
+        pageNumber: Int,
+        pageSize: Int,
+        name: String? = null,
+        city: String? = null,
+        division: String? = null,
+        category: String? = null,
+        sortParam: String? = null,
+        sellerId: String? = null
+    ): Resource<ApiResponse<List<Product>>> {
         val productsResponse = try {
-            api.getProducts(pageNumber, pageSize)
+            api.getProducts(
+                pageNumber,
+                pageSize,
+                name,
+                city,
+                division,
+                category,
+                sortParam,
+                sellerId
+            )
         } catch (e: HttpException) {
             return Resource.Error("An error occurred", null)
         } catch (e: Exception) {
@@ -47,12 +65,13 @@ class ProductsRepository @Inject constructor(private val api: SellnetApi) {
             api.addProduct(name, price, description, category, photos, token)
             Resource.Success(true)
         } catch (e: HttpException) {
-            Log.d("ERR",getError(e.response()!!.errorBody()!!))
+            Log.d("ERR", getError(e.response()!!.errorBody()!!))
             Resource.Error("An error occurred", null)
         } catch (e: Exception) {
             Log.d("ERR", e.toString())
             Resource.Error("No Internet Connection", null)
         }
     }
+
     private fun getError(response: ResponseBody) = response.string()
 }

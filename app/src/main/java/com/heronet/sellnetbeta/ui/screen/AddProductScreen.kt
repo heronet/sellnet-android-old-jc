@@ -41,7 +41,7 @@ fun AddProductScreen(
         var category by remember { mutableStateOf("") }
         var categoryExpanded by remember { mutableStateOf(false) }
         val isLoading by remember { productsViewModel.isLoading }
-        var uploadFinished by remember { productsViewModel.uploadFinished }
+        val uploadFinished by remember { productsViewModel.uploadFinished }
 
         val categories = remember {
             listOf(

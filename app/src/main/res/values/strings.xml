@@ -3,6 +3,7 @@
     <!-- Screen Routes -->
     <string name="products">Products</string>
     <string name="addProduct">Add Product</string>
+    <string name="userProducts">My Products</string>
     <string name="login">Login</string>
     <string name="register">Register</string>
 </resources>

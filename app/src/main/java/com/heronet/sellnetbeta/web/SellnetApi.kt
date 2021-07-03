@@ -10,7 +10,13 @@ interface SellnetApi {
     @GET("products/all")
     suspend fun getProducts(
         @Query("pageNumber") pageNumber: Int = 1,
-        @Query("pageSize") pageSize: Int = 10
+        @Query("pageSize") pageSize: Int = 10,
+        @Query("name") name: String? = null,
+        @Query("city") city: String? = null,
+        @Query("division") division: String? = null,
+        @Query("category") category: String? = null,
+        @Query("sortParam") sortParam: String? = null,
+        @Query("sellerId") sellerId: String? = null
     ): ApiResponse<List<Product>>
 
     @GET("products/{id}")
