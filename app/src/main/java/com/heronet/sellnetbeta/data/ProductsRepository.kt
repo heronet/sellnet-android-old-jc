@@ -53,6 +53,18 @@ class ProductsRepository @Inject constructor(private val api: SellnetApi) {
         return Resource.Success(product, null)
     }
 
+    suspend fun deleteProduct(id: String, token: String): Resource<Boolean> {
+        return try {
+            api.deleteProduct(authorization = token, id = id)
+            Resource.Success(true)
+        } catch (e: HttpException) {
+            Log.d("ERR", e.toString())
+            Resource.Error("An error occurred", null)
+        } catch (e: Exception) {
+            Resource.Error("No Internet Connection", null)
+        }
+    }
+
     suspend fun addProduct(
         name: RequestBody,
         price: RequestBody,

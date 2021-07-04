@@ -2,7 +2,6 @@ package com.heronet.sellnetbeta.viewmodel
 
 import android.content.Context
 import android.net.Uri
-import android.util.Log
 import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -75,7 +74,6 @@ class ProductsViewModel @Inject constructor(
                         products.value += response.data.data
                     ++currentPage
                     isLoading.value = false
-                    Log.d("SS", productsCount.value.toString())
                 }
             }
         }

@@ -25,13 +25,21 @@ fun NavHostContainer(
     authViewModel: AuthViewModel,
     modifier: Modifier = Modifier,
 ) {
-    NavHost(navController = navController, startDestination = Screen.Products.route, modifier = modifier) {
+    NavHost(
+        navController = navController,
+        startDestination = Screen.Products.route,
+        modifier = modifier
+    ) {
         composable(Screen.Products.route) {
-            ProductsListScreen(productsViewModel = productsViewModel, authViewModel = authViewModel, navController)
+            ProductsListScreen(
+                productsViewModel = productsViewModel,
+                authViewModel = authViewModel,
+                navController
+            )
         }
         composable("${Screen.Products.route}/{productId}",
             arguments = listOf(
-                navArgument("productId"){ type = NavType.StringType }
+                navArgument("productId") { type = NavType.StringType }
             )
         ) { backStackEntry ->
             ProductDetailScreen(
@@ -40,7 +48,7 @@ fun NavHostContainer(
             )
         }
         composable(Screen.AddProduct.route) {
-            when(authViewModel.authStatus.value) {
+            when (authViewModel.authStatus.value) {
                 is AuthStatus.Authenticated -> {
                     AddProductScreen(productsViewModel, authViewModel, navController)
                 }
@@ -53,9 +61,9 @@ fun NavHostContainer(
             }
         }
         composable(Screen.UserProducts.route) {
-            when(authViewModel.authStatus.value) {
+            when (authViewModel.authStatus.value) {
                 is AuthStatus.Authenticated -> {
-                    UserProductsScreen(productsViewModel)
+                    UserProductsScreen(navController)
                 }
                 is AuthStatus.Unauthenticated -> {
                     navController.navigate(Screen.Login.route) {
@@ -66,7 +74,7 @@ fun NavHostContainer(
             }
         }
         composable(Screen.Login.route) {
-            when(authViewModel.authStatus.value) {
+            when (authViewModel.authStatus.value) {
                 is AuthStatus.Unauthenticated -> {
                     LoginScreen(navController = navController, authViewModel = authViewModel)
                 }
@@ -79,7 +87,7 @@ fun NavHostContainer(
             }
         }
         composable(Screen.Register.route) {
-            when(authViewModel.authStatus.value) {
+            when (authViewModel.authStatus.value) {
                 is AuthStatus.Unauthenticated -> {
                     RegisterScreen(authViewModel = authViewModel)
                 }

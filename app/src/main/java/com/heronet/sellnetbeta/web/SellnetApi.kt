@@ -19,8 +19,22 @@ interface SellnetApi {
         @Query("sellerId") sellerId: String? = null
     ): ApiResponse<List<Product>>
 
+    @POST("products")
+    @Multipart
+    suspend fun addProduct(
+        @Part("name") name: RequestBody,
+        @Part("price") price: RequestBody,
+        @Part("description") description: RequestBody,
+        @Part("category") category: RequestBody,
+        @Part photos: List<MultipartBody.Part>,
+        @Header("Authorization") authorization: String
+    )
+
     @GET("products/{id}")
     suspend fun getProduct(@Path("id") id: String): Product
+
+    @DELETE("products/{id}")
+    suspend fun deleteProduct(@Header("Authorization") authorization: String, @Path("id") id: String)
 
     @POST("account/login")
     suspend fun login(@Body loginDto: LoginDto): AuthData
@@ -34,14 +48,5 @@ interface SellnetApi {
     @GET("utilities/locations")
     suspend fun getLocations(): Location
 
-    @POST("products")
-    @Multipart
-    suspend fun addProduct(
-        @Part("name") name: RequestBody,
-        @Part("price") price: RequestBody,
-        @Part("description") description: RequestBody,
-        @Part("category") category: RequestBody,
-        @Part photos: List<MultipartBody.Part>,
-        @Header("Authorization") authorization: String
-    )
+
 }

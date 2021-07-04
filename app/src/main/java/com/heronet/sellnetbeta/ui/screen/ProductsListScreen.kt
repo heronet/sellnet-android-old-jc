@@ -18,6 +18,7 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
@@ -31,7 +32,6 @@ import com.heronet.sellnetbeta.model.Product
 import com.heronet.sellnetbeta.util.DateParser
 import com.heronet.sellnetbeta.viewmodel.AuthViewModel
 import com.heronet.sellnetbeta.viewmodel.ProductsViewModel
-import com.heronet.sellnetbeta.web.Location
 
 
 @Composable
@@ -377,7 +377,7 @@ fun ItemCard(
                     overflow = TextOverflow.Ellipsis
                 )
                 Text(text = product.category, fontSize = 17.sp, fontWeight = FontWeight.Bold)
-                Text(text = "${product.price} TK")
+                Text(text = "${product.price} TK", style = TextStyle(color = MaterialTheme.colors.primaryVariant))
                 Text(text = "${product.city}, ${product.division}")
                 Text(text = date)
             }
