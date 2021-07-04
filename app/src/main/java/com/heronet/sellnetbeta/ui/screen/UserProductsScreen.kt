@@ -11,13 +11,14 @@ import androidx.compose.material.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavHostController
 import com.google.accompanist.coil.rememberCoilPainter
@@ -49,6 +50,20 @@ fun UserProductsScreen(
                 verticalArrangement = Arrangement.Center
             ) {
                 CircularProgressIndicator()
+            }
+        } else if (!isLoading && products.isEmpty()) {
+            Column(
+                modifier = Modifier
+                    .fillMaxSize(),
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.Center
+            ) {
+                Text(
+                    text = "Oops. It looks like you haven't added any product yet.",
+                    textAlign = TextAlign.Center,
+                    style = MaterialTheme.typography.h4,
+                    color = Color.LightGray
+                )
             }
         } else if (loadError.isNotBlank()) {
             Column(
@@ -142,7 +157,7 @@ fun ProductCard(product: Product, onDelete: (String) -> Unit, isDeleting: Boolea
                     Text(
                         text = product.name,
                         fontWeight = FontWeight.Bold,
-                        fontSize = 20.sp,
+                        style = MaterialTheme.typography.h6,
                         maxLines = 1,
                         overflow = TextOverflow.Ellipsis
                     )

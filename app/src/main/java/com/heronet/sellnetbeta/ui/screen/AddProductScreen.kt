@@ -14,9 +14,12 @@ import androidx.compose.material.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.shadow
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import androidx.navigation.NavGraph.Companion.findStartDestination
 import com.google.accompanist.coil.rememberCoilPainter
@@ -42,7 +45,8 @@ fun AddProductScreen(
         var categoryExpanded by remember { mutableStateOf(false) }
         val isLoading by remember { productsViewModel.isLoading }
         val uploadFinished by remember { productsViewModel.uploadFinished }
-
+        var submitError by remember { mutableStateOf("") }
+        var maxPhotosExceededError by remember { mutableStateOf("") }
         val categories = remember {
             listOf(
                 "Phones",
@@ -59,9 +63,10 @@ fun AddProductScreen(
                 "Others"
             )
         }
-        val selectorLauncher = rememberLauncherForActivityResult(contract = ActivityResultContracts.GetMultipleContents()) {
-            imageUris = it
-        }
+        val selectorLauncher =
+            rememberLauncherForActivityResult(contract = ActivityResultContracts.GetMultipleContents()) {
+                imageUris = it
+            }
         val scrollState = rememberScrollState()
 
         Column(
@@ -73,15 +78,15 @@ fun AddProductScreen(
                 value = name,
                 onValueChange = { name = it },
                 singleLine = true,
-                label = { Text("Product Title")},
-                placeholder = { Text("Add an easily guessable name")},
+                label = { Text("Product Title") },
+                placeholder = { Text("Add an easily guessable name") },
                 modifier = Modifier.fillMaxWidth()
             )
             OutlinedTextField(
                 value = price,
                 singleLine = true,
-                label = { Text("Price")},
-                placeholder = { Text("Good prices, good sells")},
+                label = { Text("Price") },
+                placeholder = { Text("Good prices, good sells") },
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                 onValueChange = { value ->
                     if (value.length <= 9) {
@@ -93,8 +98,8 @@ fun AddProductScreen(
             OutlinedTextField(
                 value = description,
                 onValueChange = { description = it },
-                label = { Text("Description")},
-                placeholder = { Text("Describe your item as good as you can")},
+                label = { Text("Description") },
+                placeholder = { Text("Describe your item as good as you can") },
                 modifier = Modifier.fillMaxWidth()
             )
             if (category.isNotBlank()) {
@@ -102,11 +107,13 @@ fun AddProductScreen(
                     value = category,
                     onValueChange = { /* Do Nothing */ },
                     enabled = false,
-                    label = { Text("Category")},
+                    label = { Text("Category") },
                     modifier = Modifier.fillMaxWidth()
                 )
             }
-            DropdownMenu(expanded = categoryExpanded, onDismissRequest = { categoryExpanded = false }) {
+            DropdownMenu(
+                expanded = categoryExpanded,
+                onDismissRequest = { categoryExpanded = false }) {
                 categories.forEach { cat ->
                     DropdownMenuItem(onClick = { category = cat; categoryExpanded = false }) {
                         Text(text = cat)
@@ -114,30 +121,77 @@ fun AddProductScreen(
                 }
             }
             Spacer(modifier = Modifier.height(8.dp))
-            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-                Button(onClick = { categoryExpanded = !categoryExpanded }, enabled = !isLoading, modifier = Modifier.fillMaxWidth(0.5f)) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween
+            ) {
+                Button(
+                    onClick = { categoryExpanded = !categoryExpanded },
+                    enabled = !isLoading,
+                    modifier = Modifier.fillMaxWidth(0.5f)
+                ) {
                     Text(text = "Select Category")
                 }
                 Spacer(modifier = Modifier.width(8.dp))
-                Button(onClick = { selectorLauncher.launch("image/*") }, enabled = !isLoading, modifier = Modifier.fillMaxWidth()) {
+                Button(
+                    onClick = { selectorLauncher.launch("image/*") },
+                    enabled = !isLoading,
+                    modifier = Modifier.fillMaxWidth()
+                ) {
                     Text(text = "Add Photos")
                 }
             }
-            Spacer(modifier = Modifier.height(8.dp))
             Button(
                 onClick = {
                     val token = authViewModel.authStatus.value.authData!!.token
-                    productsViewModel.addProduct(name, price, description, category, imageUris, token)
+                    if (name.isNotBlank() && price.isNotBlank() && description.isNotBlank() && category.isNotBlank() && imageUris.isNotEmpty() && imageUris.size <= 5) {
+                        submitError = ""
+                        maxPhotosExceededError = ""
+                        productsViewModel.addProduct(
+                            name,
+                            price,
+                            description,
+                            category,
+                            imageUris,
+                            token
+                        )
+                    } else {
+                        submitError = "You must fill the form."
+                        if (imageUris.size > 5)
+                            maxPhotosExceededError = "You can only add up to 5 photos. Try reelecting them."
+                    }
                 },
                 enabled = !isLoading,
-                modifier = Modifier.fillMaxWidth()
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(vertical = 8.dp)
             ) {
                 if (!isLoading)
                     Text(text = "Submit Product")
                 else
                     Text(text = "Please Wait...")
             }
-            Spacer(modifier = Modifier.height(8.dp))
+            if (submitError.isNotBlank())
+                Text(
+                    text = submitError,
+                    color = Color.Red,
+                    fontSize = 14.sp,
+                    modifier = Modifier
+                        .padding(bottom = 8.dp)
+                        .fillMaxWidth(),
+                    textAlign = TextAlign.Center
+                )
+            if (maxPhotosExceededError.isNotBlank())
+                Text(
+                    text = maxPhotosExceededError,
+                    color = Color.Red,
+                    fontSize = 14.sp,
+                    modifier = Modifier
+                        .padding(bottom = 8.dp)
+                        .fillMaxWidth(),
+                    textAlign = TextAlign.Center
+                )
+
             PhotosPreview(imageUris, modifier = Modifier.fillMaxWidth())
         }
         if (uploadFinished) {

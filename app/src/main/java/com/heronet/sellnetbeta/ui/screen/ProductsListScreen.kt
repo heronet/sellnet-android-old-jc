@@ -17,9 +17,11 @@ import androidx.compose.material.icons.filled.Search
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -62,6 +64,7 @@ fun ProductsListScreen(
     }
     val sortOrders = remember {
         listOf(
+            "None",
             "Price: Low to High",
             "Price: High to Low",
             "Date: Old to New",
@@ -70,7 +73,7 @@ fun ProductsListScreen(
     }
     var name by remember { mutableStateOf("") }
     var selectedCategory by remember { mutableStateOf(categories[0]) }
-    var sortBy by remember { mutableStateOf("") }
+    var sortBy by remember { mutableStateOf(sortOrders[0]) }
     var division by remember { mutableStateOf("") }
     var city by remember { mutableStateOf("") }
     var filterVisible by remember { mutableStateOf(false) }
@@ -89,6 +92,20 @@ fun ProductsListScreen(
                     ) {
                         CircularProgressIndicator()
                     }
+                } else if (!isLoading && products.isEmpty()) {
+                    Column(
+                        modifier = Modifier
+                            .fillMaxSize(),
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        verticalArrangement = Arrangement.Center
+                    ) {
+                        Text(
+                            text = "Oops. It looks like there is no product listed yet.",
+                            textAlign = TextAlign.Center,
+                            style = MaterialTheme.typography.h4,
+                            color = Color.LightGray
+                        )
+                    }
                 } else if (loadError.isNotBlank()) {
                     Column(
                         modifier = Modifier
@@ -102,7 +119,7 @@ fun ProductsListScreen(
                     Column(modifier = Modifier.padding(horizontal = 12.dp)) {
                         OutlinedTextField(
                             value = name,
-                            onValueChange = {name = it},
+                            onValueChange = { name = it },
                             label = { Text(text = "Search") },
                             placeholder = { Text(text = "What are you looking for?") },
                             modifier = Modifier
@@ -115,19 +132,40 @@ fun ProductsListScreen(
                             keyboardActions = KeyboardActions(
                                 onDone = {
                                     productsViewModel.resetProducts()
-                                    val category = if (selectedCategory != "All") selectedCategory else null
-                                    productsViewModel.getProducts(name, city, division, category, sortBy, isFiltering = true)
+                                    val category =
+                                        if (selectedCategory != "All") selectedCategory else null
+                                    val lSortBy = if (sortBy != "None") sortBy else null
+                                    productsViewModel.getProducts(
+                                        name,
+                                        city,
+                                        division,
+                                        category,
+                                        lSortBy,
+                                        isFiltering = true
+                                    )
                                 }
                             )
                         )
-                        LazyRow(horizontalArrangement = Arrangement.spacedBy(4.dp), modifier = Modifier.padding(bottom = 8.dp)) {
-                            items(categories, key = {category -> category}) { category ->
+                        LazyRow(
+                            horizontalArrangement = Arrangement.spacedBy(4.dp),
+                            modifier = Modifier.padding(bottom = 8.dp)
+                        ) {
+                            items(categories, key = { category -> category }) { category ->
                                 Button(
                                     onClick = {
                                         selectedCategory = category
                                         productsViewModel.resetProducts()
-                                        val reqCat = if (selectedCategory != "All") selectedCategory else null
-                                        productsViewModel.getProducts(name, city, division, reqCat, sortBy, isFiltering = true)
+                                        val reqCat =
+                                            if (selectedCategory != "All") selectedCategory else null
+                                        val lSortBy = if (sortBy != "None") sortBy else null
+                                        productsViewModel.getProducts(
+                                            name,
+                                            city,
+                                            division,
+                                            reqCat,
+                                            lSortBy,
+                                            isFiltering = true
+                                        )
                                     },
                                     enabled = selectedCategory != category
                                 ) {
@@ -172,11 +210,21 @@ fun ProductsListScreen(
                                     }
                                 }
                             }
-                            itemsIndexed(items = products, key = { _: Int, item: Product -> item.id }) { index, product: Product ->
+                            itemsIndexed(
+                                items = products,
+                                key = { _: Int, item: Product -> item.id }) { index, product: Product ->
                                 if (!isLoading) {
                                     if ((products.size < productsCount) && (index == products.size - 1)) {
-                                        val category = if (selectedCategory != "All") selectedCategory else null
-                                        productsViewModel.getProducts(name, city, division, category, sortBy)
+                                        val category =
+                                            if (selectedCategory != "All") selectedCategory else null
+                                        val lSortBy = if (sortBy != "None") sortBy else null
+                                        productsViewModel.getProducts(
+                                            name,
+                                            city,
+                                            division,
+                                            category,
+                                            lSortBy
+                                        )
                                     }
                                 }
                                 ItemCard(
@@ -190,7 +238,9 @@ fun ProductsListScreen(
                             Dialog(onDismissRequest = { filterVisible = false }) {
                                 if (isLocationLoading) {
                                     Column(
-                                        modifier = Modifier.width(100.dp).height(100.dp),
+                                        modifier = Modifier
+                                            .width(100.dp)
+                                            .height(100.dp),
                                         horizontalAlignment = Alignment.CenterHorizontally,
                                         verticalArrangement = Arrangement.Center
                                     ) {
@@ -209,28 +259,28 @@ fun ProductsListScreen(
                                         Text(text = "Filter")
                                         OutlinedTextField(
                                             value = selectedCategory,
-                                            onValueChange = {selectedCategory = it},
+                                            onValueChange = { selectedCategory = it },
                                             label = { Text(text = "Category") },
                                             modifier = Modifier.fillMaxWidth(),
                                             readOnly = true
                                         )
                                         OutlinedTextField(
                                             value = sortBy,
-                                            onValueChange = {sortBy = it},
+                                            onValueChange = { sortBy = it },
                                             label = { Text(text = "Sort By") },
                                             modifier = Modifier.fillMaxWidth(),
                                             readOnly = true
                                         )
                                         OutlinedTextField(
                                             value = city,
-                                            onValueChange = {city = it},
+                                            onValueChange = { city = it },
                                             label = { Text(text = "City") },
                                             modifier = Modifier.fillMaxWidth(),
                                             readOnly = true
                                         )
                                         OutlinedTextField(
                                             value = division,
-                                            onValueChange = {division = it},
+                                            onValueChange = { division = it },
                                             label = { Text(text = "Division") },
                                             modifier = Modifier.fillMaxWidth(),
                                             readOnly = true
@@ -241,49 +291,84 @@ fun ProductsListScreen(
                                         var divisionExpanded by remember { mutableStateOf(false) }
                                         var sortByExpanded by remember { mutableStateOf(false) }
 
-                                        DropdownMenu(expanded = categoryExpanded, onDismissRequest = { categoryExpanded = false }) {
+                                        DropdownMenu(
+                                            expanded = categoryExpanded,
+                                            onDismissRequest = { categoryExpanded = false }) {
                                             categories.forEach { category ->
-                                                DropdownMenuItem(onClick = { selectedCategory = category; categoryExpanded = false }) {
+                                                DropdownMenuItem(onClick = {
+                                                    selectedCategory = category; categoryExpanded =
+                                                    false
+                                                }) {
                                                     Text(text = category)
                                                 }
                                             }
                                         }
-                                        DropdownMenu(expanded = cityExpanded, onDismissRequest = { cityExpanded = false }) {
+                                        DropdownMenu(
+                                            expanded = cityExpanded,
+                                            onDismissRequest = { cityExpanded = false }) {
                                             location?.cities!!.forEach { ct ->
-                                                DropdownMenuItem(onClick = { city = ct; cityExpanded = false }) {
+                                                DropdownMenuItem(onClick = {
+                                                    city = ct; cityExpanded = false
+                                                }) {
                                                     Text(text = ct)
                                                 }
                                             }
                                         }
-                                        DropdownMenu(expanded = divisionExpanded, onDismissRequest = { divisionExpanded = false }) {
+                                        DropdownMenu(
+                                            expanded = divisionExpanded,
+                                            onDismissRequest = { divisionExpanded = false }) {
                                             location?.divisions!!.forEach { dv ->
-                                                DropdownMenuItem(onClick = { division = dv; divisionExpanded = false }) {
+                                                DropdownMenuItem(onClick = {
+                                                    division = dv; divisionExpanded = false
+                                                }) {
                                                     Text(text = dv)
                                                 }
                                             }
                                         }
-                                        DropdownMenu(expanded = sortByExpanded, onDismissRequest = { sortByExpanded = false }) {
+                                        DropdownMenu(
+                                            expanded = sortByExpanded,
+                                            onDismissRequest = { sortByExpanded = false }) {
                                             sortOrders.forEach { so ->
-                                                DropdownMenuItem(onClick = { sortBy = so; sortByExpanded = false }) {
+                                                DropdownMenuItem(onClick = {
+                                                    sortBy = so; sortByExpanded = false
+                                                }) {
                                                     Text(text = so)
                                                 }
                                             }
                                         }
-                                        Row(modifier = Modifier
-                                            .fillMaxWidth()
-                                            .padding(top = 8.dp), horizontalArrangement = Arrangement.spacedBy(4.dp)) {
-                                            Button(onClick = { categoryExpanded = !categoryExpanded }, modifier = Modifier.fillMaxWidth(0.5f)) {
+                                        Row(
+                                            modifier = Modifier
+                                                .fillMaxWidth()
+                                                .padding(top = 8.dp),
+                                            horizontalArrangement = Arrangement.spacedBy(4.dp)
+                                        ) {
+                                            Button(onClick = {
+                                                categoryExpanded = !categoryExpanded
+                                            }, modifier = Modifier.fillMaxWidth(0.5f)) {
                                                 Text(text = "Category")
                                             }
-                                            Button(onClick = { sortByExpanded = !sortByExpanded }, modifier = Modifier.fillMaxWidth()) {
+                                            Button(
+                                                onClick = { sortByExpanded = !sortByExpanded },
+                                                modifier = Modifier.fillMaxWidth()
+                                            ) {
                                                 Text(text = "Sort By")
                                             }
                                         }
-                                        Row(modifier = Modifier.fillMaxWidth().padding(vertical = 8.dp), horizontalArrangement = Arrangement.spacedBy(4.dp)) {
-                                            Button(onClick = { cityExpanded = !cityExpanded }, modifier = Modifier.fillMaxWidth(0.5f)) {
+                                        Row(
+                                            modifier = Modifier
+                                                .fillMaxWidth()
+                                                .padding(vertical = 8.dp),
+                                            horizontalArrangement = Arrangement.spacedBy(4.dp)
+                                        ) {
+                                            Button(
+                                                onClick = { cityExpanded = !cityExpanded },
+                                                modifier = Modifier.fillMaxWidth(0.5f)
+                                            ) {
                                                 Text(text = "City")
                                             }
-                                            Button(onClick = { divisionExpanded = !divisionExpanded }, modifier = Modifier.fillMaxWidth()) {
+                                            Button(onClick = {
+                                                divisionExpanded = !divisionExpanded
+                                            }, modifier = Modifier.fillMaxWidth()) {
                                                 Text(text = "Division")
                                             }
                                         }
@@ -291,12 +376,31 @@ fun ProductsListScreen(
                                             onClick = {
                                                 productsViewModel.resetProducts()
                                                 val category = if (selectedCategory != "All") selectedCategory else null
-                                                productsViewModel.getProducts(name, city, division, category, sortBy, isFiltering = true)
+                                                val lSortBy = if (sortBy != "None") sortBy else null
+                                                productsViewModel.getProducts(
+                                                    name,
+                                                    city,
+                                                    division,
+                                                    category,
+                                                    lSortBy,
+                                                    isFiltering = true
+                                                )
                                                 filterVisible = false
+                                            },
+                                            modifier = Modifier.fillMaxWidth().padding(bottom = 4.dp)
+                                        ) {
+                                            Text(text = "Filter")
+                                        }
+                                        OutlinedButton(
+                                            onClick = {
+                                                selectedCategory = "All"
+                                                sortBy = "None"
+                                                city = ""
+                                                division = ""
                                             },
                                             modifier = Modifier.fillMaxWidth()
                                         ) {
-                                            Text(text = "Filter")
+                                            Text(text = "Reset Filters")
                                         }
                                     }
                                 }
@@ -372,12 +476,15 @@ fun ItemCard(
                 Text(
                     text = product.name,
                     fontWeight = FontWeight.Bold,
-                    fontSize = 20.sp,
                     maxLines = 1,
+                    style = MaterialTheme.typography.h6,
                     overflow = TextOverflow.Ellipsis
                 )
-                Text(text = product.category, fontSize = 17.sp, fontWeight = FontWeight.Bold)
-                Text(text = "${product.price} TK", style = TextStyle(color = MaterialTheme.colors.primaryVariant))
+                Text(text = product.category, fontSize = 17.sp, fontWeight = FontWeight.Bold, color = Color.DarkGray)
+                Text(
+                    text = "${product.price} TK",
+                    style = TextStyle(color = MaterialTheme.colors.primaryVariant)
+                )
                 Text(text = "${product.city}, ${product.division}")
                 Text(text = date)
             }

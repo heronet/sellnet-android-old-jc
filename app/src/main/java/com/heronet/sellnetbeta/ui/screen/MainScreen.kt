@@ -62,13 +62,13 @@ fun MainScreen(productsViewModel: ProductsViewModel, authViewModel: AuthViewMode
                     ) {
                         when(authViewModel.authStatus.value) {
                             is AuthStatus.Authenticated -> {
-                                DropdownMenuItem(onClick = { authViewModel.logout() }) {
+                                DropdownMenuItem(onClick = { authViewModel.logout(); menuVisible = !menuVisible }) {
                                     Text(text = "Logout")
                                 }
                             }
                             else -> {}
                         }
-                        DropdownMenuItem(onClick = {  }) {
+                        DropdownMenuItem(onClick = { navController.navigate("about"); menuVisible = !menuVisible }) {
                             Text(text = "About")
                         }
                     }
@@ -178,6 +178,11 @@ fun ToolbarIcon(navBackStackEntry: NavBackStackEntry?, onClick: () -> Unit) {
                 Icon(imageVector = Icons.Default.ArrowBack, contentDescription = null)
             }
         }
+        Screen.About.route -> {
+            IconButton(onClick = onClick) {
+                Icon(imageVector = Icons.Default.ArrowBack, contentDescription = null)
+            }
+        }
         else -> IconButton(onClick = { /*TODO*/ }) {
             Icon(imageVector = Icons.Default.Store, contentDescription = null)
         }
@@ -206,6 +211,9 @@ fun ToolbarText(navBackStackEntry: NavBackStackEntry?) {
         }
         Screen.Register.route -> {
             Text(text = stringResource(id = Screen.Register.resourceId), fontSize = 20.sp)
+        }
+        Screen.About.route -> {
+            Text(text = stringResource(id = Screen.About.resourceId), fontSize = 20.sp)
         }
         else -> {
             Text(text = "Sellnet", fontSize = 20.sp, modifier = Modifier.padding(horizontal = 16.dp))

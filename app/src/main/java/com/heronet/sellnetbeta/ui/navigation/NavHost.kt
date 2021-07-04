@@ -8,10 +8,7 @@ import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.navArgument
-import com.heronet.sellnetbeta.ui.screen.AddProductScreen
-import com.heronet.sellnetbeta.ui.screen.ProductDetailScreen
-import com.heronet.sellnetbeta.ui.screen.ProductsListScreen
-import com.heronet.sellnetbeta.ui.screen.UserProductsScreen
+import com.heronet.sellnetbeta.ui.screen.*
 import com.heronet.sellnetbeta.ui.screen.authentication.LoginScreen
 import com.heronet.sellnetbeta.ui.screen.authentication.RegisterScreen
 import com.heronet.sellnetbeta.util.AuthStatus
@@ -98,6 +95,9 @@ fun NavHostContainer(
                     }
                 }
             }
+        }
+        composable(Screen.About.route) {
+            AboutScreen()
         }
     }
 }
