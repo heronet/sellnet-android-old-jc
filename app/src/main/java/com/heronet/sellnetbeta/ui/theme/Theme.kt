@@ -49,7 +49,7 @@ private val DarkColorPalette = darkColors(
 @Composable
 fun SellnetBetaTheme(
     darkTheme: Boolean = isSystemInDarkTheme(),
-    content: @Composable() () -> Unit
+    content: @Composable () -> Unit
 ) {
     val colors = if (darkTheme) {
         LightColorPalette // Temporarily Disable Dark Theme

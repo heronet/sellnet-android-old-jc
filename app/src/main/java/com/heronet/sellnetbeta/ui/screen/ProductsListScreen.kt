@@ -83,96 +83,96 @@ fun ProductsListScreen(
     Surface(color = MaterialTheme.colors.background) {
         Scaffold(
             content = {
-                if (isLoading && products.isEmpty()) {
-                    Column(
+                Column(modifier = Modifier.padding(horizontal = 12.dp)) {
+                    OutlinedTextField(
+                        value = name,
+                        onValueChange = { name = it },
+                        label = { Text(text = "Search") },
+                        placeholder = { Text(text = "What are you looking for?") },
                         modifier = Modifier
-                            .fillMaxSize(),
-                        horizontalAlignment = Alignment.CenterHorizontally,
-                        verticalArrangement = Arrangement.Center
-                    ) {
-                        CircularProgressIndicator()
-                    }
-                } else if (!isLoading && products.isEmpty()) {
-                    Column(
-                        modifier = Modifier
-                            .fillMaxSize(),
-                        horizontalAlignment = Alignment.CenterHorizontally,
-                        verticalArrangement = Arrangement.Center
-                    ) {
-                        Text(
-                            text = "Oops. It looks like there is no product listed yet.",
-                            textAlign = TextAlign.Center,
-                            style = MaterialTheme.typography.h4,
-                            color = Color.LightGray
+                            .fillMaxWidth()
+                            .padding(bottom = 8.dp),
+                        trailingIcon = {
+                            Icon(imageVector = Icons.Default.Search, contentDescription = null)
+                        },
+                        singleLine = true,
+                        keyboardActions = KeyboardActions(
+                            onDone = {
+                                productsViewModel.resetProducts()
+                                val category =
+                                    if (selectedCategory != "All") selectedCategory else null
+                                val lSortBy = if (sortBy != "None") sortBy else null
+                                productsViewModel.getProducts(
+                                    name,
+                                    city,
+                                    division,
+                                    category,
+                                    lSortBy,
+                                    isFiltering = true
+                                )
+                            }
                         )
-                    }
-                } else if (loadError.isNotBlank()) {
-                    Column(
-                        modifier = Modifier
-                            .fillMaxSize(),
-                        horizontalAlignment = Alignment.CenterHorizontally,
-                        verticalArrangement = Arrangement.Center
+                    )
+                    LazyRow(
+                        horizontalArrangement = Arrangement.spacedBy(4.dp),
+                        modifier = Modifier.padding(bottom = 8.dp)
                     ) {
-                        Text(text = loadError)
-                    }
-                } else {
-                    Column(modifier = Modifier.padding(horizontal = 12.dp)) {
-                        OutlinedTextField(
-                            value = name,
-                            onValueChange = { name = it },
-                            label = { Text(text = "Search") },
-                            placeholder = { Text(text = "What are you looking for?") },
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(bottom = 8.dp),
-                            trailingIcon = {
-                                Icon(imageVector = Icons.Default.Search, contentDescription = null)
-                            },
-                            singleLine = true,
-                            keyboardActions = KeyboardActions(
-                                onDone = {
+                        items(categories, key = { category -> category }) { category ->
+                            Button(
+                                onClick = {
+                                    selectedCategory = category
                                     productsViewModel.resetProducts()
-                                    val category =
+                                    val reqCat =
                                         if (selectedCategory != "All") selectedCategory else null
                                     val lSortBy = if (sortBy != "None") sortBy else null
                                     productsViewModel.getProducts(
                                         name,
                                         city,
                                         division,
-                                        category,
+                                        reqCat,
                                         lSortBy,
                                         isFiltering = true
                                     )
-                                }
-                            )
-                        )
-                        LazyRow(
-                            horizontalArrangement = Arrangement.spacedBy(4.dp),
-                            modifier = Modifier.padding(bottom = 8.dp)
-                        ) {
-                            items(categories, key = { category -> category }) { category ->
-                                Button(
-                                    onClick = {
-                                        selectedCategory = category
-                                        productsViewModel.resetProducts()
-                                        val reqCat =
-                                            if (selectedCategory != "All") selectedCategory else null
-                                        val lSortBy = if (sortBy != "None") sortBy else null
-                                        productsViewModel.getProducts(
-                                            name,
-                                            city,
-                                            division,
-                                            reqCat,
-                                            lSortBy,
-                                            isFiltering = true
-                                        )
-                                    },
-                                    enabled = selectedCategory != category
-                                ) {
-                                    Text(text = category)
-                                }
+                                },
+                                enabled = selectedCategory != category
+                            ) {
+                                Text(text = category)
                             }
                         }
+                    }
+                    if (isLoading && products.isEmpty()) {
+                        Column(
+                            modifier = Modifier
+                                .fillMaxSize(),
+                            horizontalAlignment = Alignment.CenterHorizontally,
+                            verticalArrangement = Arrangement.Center
+                        ) {
+                            CircularProgressIndicator()
+                        }
+                    } else if (!isLoading && products.isEmpty()) {
+                        Column(
+                            modifier = Modifier
+                                .fillMaxSize(),
+                            horizontalAlignment = Alignment.CenterHorizontally,
+                            verticalArrangement = Arrangement.Center
+                        ) {
+                            Text(
+                                text = "Oops. It looks like there is no product listed yet.",
+                                textAlign = TextAlign.Center,
+                                style = MaterialTheme.typography.h4,
+                                color = Color.LightGray
+                            )
+                        }
+                    } else if (loadError.isNotBlank()) {
+                        Column(
+                            modifier = Modifier
+                                .fillMaxSize(),
+                            horizontalAlignment = Alignment.CenterHorizontally,
+                            verticalArrangement = Arrangement.Center
+                        ) {
+                            Text(text = loadError)
+                        }
+                    } else {
                         LazyColumn(
                             verticalArrangement = Arrangement.spacedBy(6.dp),
                             contentPadding = PaddingValues(vertical = 4.dp),
@@ -194,7 +194,7 @@ fun ProductsListScreen(
                                         modifier = Modifier.background(MaterialTheme.colors.primary)
                                     ) {
                                         Text(
-                                            text = "$productsCount results found",
+                                            text = "$productsCount ${if (productsCount > 1) "results" else "result" } found",
                                             color = MaterialTheme.colors.onPrimary,
                                             modifier = Modifier.padding(horizontal = 8.dp)
                                         )
@@ -431,14 +431,16 @@ fun ItemCard(
 ) {
     val date = DateParser.getFormattedDate(product.createdAt)
     Card(
-        modifier = modifier.fillMaxWidth(),
+        modifier = modifier
+            .fillMaxWidth()
+            .height(130.dp),
         shape = RoundedCornerShape(4.dp),
         elevation = 8.dp,
     ) {
         Row {
             Box(
                 modifier = Modifier
-                    .height(130.dp)
+                    .fillMaxHeight()
                     .width(130.dp)
             ) {
                 val painter = rememberCoilPainter(
@@ -449,9 +451,7 @@ fun ItemCard(
                     painter = painter,
                     contentDescription = product.thumbnail.publicId,
                     contentScale = ContentScale.Crop,
-                    modifier = Modifier
-                        .height(130.dp)
-                        .width(130.dp)
+                    modifier = Modifier.fillMaxSize()
                 )
                 when (painter.loadState) {
                     is ImageLoadState.Loading -> {
@@ -459,9 +459,7 @@ fun ItemCard(
                             painter = rememberCoilPainter(request = R.drawable.placeholder),
                             contentDescription = product.thumbnail.publicId,
                             contentScale = ContentScale.Crop,
-                            modifier = Modifier
-                                .height(130.dp)
-                                .width(130.dp)
+                            modifier = Modifier.fillMaxSize()
                         )
                     }
                     is ImageLoadState.Error -> {
