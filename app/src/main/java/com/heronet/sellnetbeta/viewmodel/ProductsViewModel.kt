@@ -2,7 +2,10 @@ package com.heronet.sellnetbeta.viewmodel
 
 import android.content.Context
 import android.net.Uri
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.heronet.sellnetbeta.data.ProductsRepository
@@ -30,36 +33,56 @@ class ProductsViewModel @Inject constructor(
     var uploadFinished = mutableStateOf(false)
     var errorMessage = mutableStateOf("")
 
+    val categories = listOf(
+        "All",
+        "Phones",
+        "Cars",
+        "Clothes",
+        "PC Parts",
+        "Humans",
+        "Antiques",
+        "Museum Steals",
+        "Ships",
+        "Kidneys",
+        "Bikes",
+        "Real Estates"
+    )
+
+    val sortOrders = listOf(
+        "None",
+        "Price: Low to High",
+        "Price: High to Low",
+        "Date: Old to New",
+        "Date: New to Old"
+    )
+    // Query Params
+    var name by mutableStateOf("")
+    var selectedCategory by  mutableStateOf(categories[0])
+    var sortBy by  mutableStateOf(sortOrders[0])
+    var division by  mutableStateOf("")
+    var city by  mutableStateOf("")
+
+
     private var currentPage = 1
 
     init {
         getProducts()
     }
 
-    fun getProducts(
-        name: String? = null,
-        city: String? = null,
-        division: String? = null,
-        category: String? = null,
-        sortParam: String? = null,
-        sellerId: String? = null,
-        isFiltering: Boolean? = false
-    ) {
+    fun getProducts() {
         viewModelScope.launch {
             isLoading.value = true
 
-            // Check if filtering.
-            if (isFiltering == true) currentPage = 1
-
+            val reqCat = if (selectedCategory != "All") selectedCategory else null
+            val lSortBy = if (sortBy != "None") sortBy else null
             when (val response = repository.getProducts(
                 currentPage,
                 PAGE_SIZE,
                 name,
                 city,
                 division,
-                category,
-                sortParam,
-                sellerId
+                reqCat,
+                lSortBy
             )) {
                 is Resource.Error -> {
                     errorMessage.value = response.message!!
@@ -68,10 +91,7 @@ class ProductsViewModel @Inject constructor(
                 is Resource.Success -> {
                     productsCount.value = response.data!!.size
                     errorMessage.value = ""
-                    if (isFiltering == true) // If request is filter query, set products to response
-                        products.value = response.data.data
-                    else // Used for pagination. Request may or may not be filtered.
-                        products.value += response.data.data
+                    products.value += response.data.data
                     ++currentPage
                     isLoading.value = false
                 }
@@ -137,6 +157,16 @@ class ProductsViewModel @Inject constructor(
 
     // Reset products for query
     fun resetProducts() {
+        currentPage = 1
         products.value = listOf()
+    }
+    fun resetFilters() {
+        resetProducts()
+        name = ""
+        selectedCategory = "All"
+        sortBy = "None"
+        city = ""
+        division = ""
+        getProducts()
     }
 }

@@ -19,6 +19,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -46,36 +47,8 @@ fun ProductsListScreen(
     val isLoading by remember { productsViewModel.isLoading }
     val loadError by remember { productsViewModel.errorMessage }
     val productsCount by remember { productsViewModel.productsCount }
-    val categories = remember {
-        listOf(
-            "All",
-            "Phones",
-            "Cars",
-            "Clothes",
-            "PC Parts",
-            "Humans",
-            "Antiques",
-            "Museum Steals",
-            "Ships",
-            "Kidneys",
-            "Bikes",
-            "Real Estates"
-        )
-    }
-    val sortOrders = remember {
-        listOf(
-            "None",
-            "Price: Low to High",
-            "Price: High to Low",
-            "Date: Old to New",
-            "Date: New to Old"
-        )
-    }
-    var name by remember { mutableStateOf("") }
-    var selectedCategory by remember { mutableStateOf(categories[0]) }
-    var sortBy by remember { mutableStateOf(sortOrders[0]) }
-    var division by remember { mutableStateOf("") }
-    var city by remember { mutableStateOf("") }
+    val categories = remember { productsViewModel.categories }
+    val sortOrders = remember { productsViewModel.sortOrders }
     var filterVisible by remember { mutableStateOf(false) }
     val location by remember { authViewModel.locations }
     val isLocationLoading by remember { authViewModel.isLocationsLoading }
@@ -84,9 +57,10 @@ fun ProductsListScreen(
         Scaffold(
             content = {
                 Column(modifier = Modifier.padding(horizontal = 12.dp)) {
+                    val focusManager = LocalFocusManager.current
                     OutlinedTextField(
-                        value = name,
-                        onValueChange = { name = it },
+                        value = productsViewModel.name,
+                        onValueChange = { productsViewModel.name = it },
                         label = { Text(text = "Search") },
                         placeholder = { Text(text = "What are you looking for?") },
                         modifier = Modifier
@@ -98,18 +72,9 @@ fun ProductsListScreen(
                         singleLine = true,
                         keyboardActions = KeyboardActions(
                             onDone = {
+                                focusManager.clearFocus()
                                 productsViewModel.resetProducts()
-                                val category =
-                                    if (selectedCategory != "All") selectedCategory else null
-                                val lSortBy = if (sortBy != "None") sortBy else null
-                                productsViewModel.getProducts(
-                                    name,
-                                    city,
-                                    division,
-                                    category,
-                                    lSortBy,
-                                    isFiltering = true
-                                )
+                                productsViewModel.getProducts()
                             }
                         )
                     )
@@ -120,21 +85,12 @@ fun ProductsListScreen(
                         items(categories, key = { category -> category }) { category ->
                             Button(
                                 onClick = {
-                                    selectedCategory = category
                                     productsViewModel.resetProducts()
-                                    val reqCat =
-                                        if (selectedCategory != "All") selectedCategory else null
-                                    val lSortBy = if (sortBy != "None") sortBy else null
-                                    productsViewModel.getProducts(
-                                        name,
-                                        city,
-                                        division,
-                                        reqCat,
-                                        lSortBy,
-                                        isFiltering = true
-                                    )
+                                    productsViewModel.selectedCategory = category
+
+                                    productsViewModel.getProducts()
                                 },
-                                enabled = selectedCategory != category
+                                enabled = productsViewModel.selectedCategory != category
                             ) {
                                 Text(text = category)
                             }
@@ -150,18 +106,24 @@ fun ProductsListScreen(
                             CircularProgressIndicator()
                         }
                     } else if (!isLoading && products.isEmpty()) {
-                        Column(
-                            modifier = Modifier
-                                .fillMaxSize(),
-                            horizontalAlignment = Alignment.CenterHorizontally,
-                            verticalArrangement = Arrangement.Center
-                        ) {
-                            Text(
-                                text = "Oops. It looks like there is no product listed yet.",
-                                textAlign = TextAlign.Center,
-                                style = MaterialTheme.typography.h4,
-                                color = Color.LightGray
-                            )
+                        Column(modifier = Modifier.fillMaxSize()) {
+                            Filter(result = "$productsCount ${if (productsCount > 1) "results" else "result" } found") {
+                                filterVisible = !filterVisible
+                                authViewModel.getLocations()
+                            }
+                            Column(
+                                modifier = Modifier
+                                    .fillMaxSize(),
+                                horizontalAlignment = Alignment.CenterHorizontally,
+                                verticalArrangement = Arrangement.Center
+                            ) {
+                                Text(
+                                    text = "Oops. It looks like there is no product listed yet.",
+                                    textAlign = TextAlign.Center,
+                                    style = MaterialTheme.typography.h4,
+                                    color = Color.LightGray
+                                )
+                            }
                         }
                     } else if (loadError.isNotBlank()) {
                         Column(
@@ -179,35 +141,9 @@ fun ProductsListScreen(
                             modifier = Modifier.fillMaxHeight()
                         ) {
                             item {
-                                Card(
-                                    modifier = Modifier
-                                        .padding(bottom = 8.dp)
-                                        .fillMaxWidth()
-                                        .background(
-                                            MaterialTheme.colors.primary,
-                                            RoundedCornerShape(topStart = 6.dp, bottomEnd = 6.dp)
-                                        )
-                                ) {
-                                    Row(
-                                        horizontalArrangement = Arrangement.SpaceBetween,
-                                        verticalAlignment = Alignment.CenterVertically,
-                                        modifier = Modifier.background(MaterialTheme.colors.primary)
-                                    ) {
-                                        Text(
-                                            text = "$productsCount ${if (productsCount > 1) "results" else "result" } found",
-                                            color = MaterialTheme.colors.onPrimary,
-                                            modifier = Modifier.padding(horizontal = 8.dp)
-                                        )
-                                        OutlinedButton(
-                                            onClick = {
-                                                filterVisible = !filterVisible
-                                                authViewModel.getLocations()
-                                            },
-                                            modifier = Modifier.padding(4.dp)
-                                        ) {
-                                            Text(text = "Filter")
-                                        }
-                                    }
+                                Filter(result = "$productsCount ${if (productsCount > 1) "results" else "result" } found") {
+                                    filterVisible = !filterVisible
+                                    authViewModel.getLocations()
                                 }
                             }
                             itemsIndexed(
@@ -215,16 +151,7 @@ fun ProductsListScreen(
                                 key = { _: Int, item: Product -> item.id }) { index, product: Product ->
                                 if (!isLoading) {
                                     if ((products.size < productsCount) && (index == products.size - 1)) {
-                                        val category =
-                                            if (selectedCategory != "All") selectedCategory else null
-                                        val lSortBy = if (sortBy != "None") sortBy else null
-                                        productsViewModel.getProducts(
-                                            name,
-                                            city,
-                                            division,
-                                            category,
-                                            lSortBy
-                                        )
+                                        productsViewModel.getProducts()
                                     }
                                 }
                                 ItemCard(
@@ -234,174 +161,163 @@ fun ProductsListScreen(
                                 )
                             }
                         }
-                        if (filterVisible) {
-                            Dialog(onDismissRequest = { filterVisible = false }) {
-                                if (isLocationLoading) {
-                                    Column(
-                                        modifier = Modifier
-                                            .width(100.dp)
-                                            .height(100.dp),
-                                        horizontalAlignment = Alignment.CenterHorizontally,
-                                        verticalArrangement = Arrangement.Center
-                                    ) {
-                                        CircularProgressIndicator()
+                    }
+                    if (filterVisible) {
+                        Dialog(onDismissRequest = { filterVisible = false }) {
+                            if (isLocationLoading) {
+                                Column(
+                                    modifier = Modifier
+                                        .width(100.dp)
+                                        .height(100.dp),
+                                    horizontalAlignment = Alignment.CenterHorizontally,
+                                    verticalArrangement = Arrangement.Center
+                                ) {
+                                    CircularProgressIndicator()
+                                }
+                            } else {
+                                Column(
+                                    modifier = Modifier
+                                        .background(
+                                            MaterialTheme.colors.background,
+                                            RoundedCornerShape(8.dp)
+                                        )
+                                        .padding(16.dp)
+                                        .width(300.dp),
+                                ) {
+                                    Text(text = "Filter")
+                                    OutlinedTextField(
+                                        value = productsViewModel.selectedCategory,
+                                        onValueChange = { productsViewModel.selectedCategory = it },
+                                        label = { Text(text = "Category") },
+                                        modifier = Modifier.fillMaxWidth(),
+                                        readOnly = true
+                                    )
+                                    OutlinedTextField(
+                                        value = productsViewModel.sortBy,
+                                        onValueChange = { productsViewModel.sortBy = it },
+                                        label = { Text(text = "Sort By") },
+                                        modifier = Modifier.fillMaxWidth(),
+                                        readOnly = true
+                                    )
+                                    OutlinedTextField(
+                                        value = productsViewModel.city,
+                                        onValueChange = { productsViewModel.city = it },
+                                        label = { Text(text = "City") },
+                                        modifier = Modifier.fillMaxWidth(),
+                                        readOnly = true
+                                    )
+                                    OutlinedTextField(
+                                        value = productsViewModel.division,
+                                        onValueChange = { productsViewModel.division = it },
+                                        label = { Text(text = "Division") },
+                                        modifier = Modifier.fillMaxWidth(),
+                                        readOnly = true
+                                    )
+
+                                    var categoryExpanded by remember { mutableStateOf(false) }
+                                    var cityExpanded by remember { mutableStateOf(false) }
+                                    var divisionExpanded by remember { mutableStateOf(false) }
+                                    var sortByExpanded by remember { mutableStateOf(false) }
+
+                                    DropdownMenu(
+                                        expanded = categoryExpanded,
+                                        onDismissRequest = { categoryExpanded = false }) {
+                                        categories.forEach { category ->
+                                            DropdownMenuItem(onClick = {
+                                                productsViewModel.selectedCategory = category; categoryExpanded = false
+                                            }) {
+                                                Text(text = category)
+                                            }
+                                        }
                                     }
-                                } else {
-                                    Column(
+                                    DropdownMenu(
+                                        expanded = cityExpanded,
+                                        onDismissRequest = { cityExpanded = false }) {
+                                        location?.cities!!.forEach { ct ->
+                                            DropdownMenuItem(onClick = {
+                                                productsViewModel.city = ct; cityExpanded = false
+                                            }) {
+                                                Text(text = ct)
+                                            }
+                                        }
+                                    }
+                                    DropdownMenu(
+                                        expanded = divisionExpanded,
+                                        onDismissRequest = { divisionExpanded = false }) {
+                                        location?.divisions!!.forEach { dv ->
+                                            DropdownMenuItem(onClick = {
+                                                productsViewModel.division = dv; divisionExpanded = false
+                                            }) {
+                                                Text(text = dv)
+                                            }
+                                        }
+                                    }
+                                    DropdownMenu(
+                                        expanded = sortByExpanded,
+                                        onDismissRequest = { sortByExpanded = false }) {
+                                        sortOrders.forEach { so ->
+                                            DropdownMenuItem(onClick = {
+                                                productsViewModel.sortBy = so; sortByExpanded = false
+                                            }) {
+                                                Text(text = so)
+                                            }
+                                        }
+                                    }
+                                    Row(
                                         modifier = Modifier
-                                            .background(
-                                                MaterialTheme.colors.background,
-                                                RoundedCornerShape(8.dp)
-                                            )
-                                            .padding(16.dp)
-                                            .width(300.dp),
+                                            .fillMaxWidth()
+                                            .padding(top = 8.dp),
+                                        horizontalArrangement = Arrangement.spacedBy(4.dp)
                                     ) {
-                                        Text(text = "Filter")
-                                        OutlinedTextField(
-                                            value = selectedCategory,
-                                            onValueChange = { selectedCategory = it },
-                                            label = { Text(text = "Category") },
-                                            modifier = Modifier.fillMaxWidth(),
-                                            readOnly = true
-                                        )
-                                        OutlinedTextField(
-                                            value = sortBy,
-                                            onValueChange = { sortBy = it },
-                                            label = { Text(text = "Sort By") },
-                                            modifier = Modifier.fillMaxWidth(),
-                                            readOnly = true
-                                        )
-                                        OutlinedTextField(
-                                            value = city,
-                                            onValueChange = { city = it },
-                                            label = { Text(text = "City") },
-                                            modifier = Modifier.fillMaxWidth(),
-                                            readOnly = true
-                                        )
-                                        OutlinedTextField(
-                                            value = division,
-                                            onValueChange = { division = it },
-                                            label = { Text(text = "Division") },
-                                            modifier = Modifier.fillMaxWidth(),
-                                            readOnly = true
-                                        )
-
-                                        var categoryExpanded by remember { mutableStateOf(false) }
-                                        var cityExpanded by remember { mutableStateOf(false) }
-                                        var divisionExpanded by remember { mutableStateOf(false) }
-                                        var sortByExpanded by remember { mutableStateOf(false) }
-
-                                        DropdownMenu(
-                                            expanded = categoryExpanded,
-                                            onDismissRequest = { categoryExpanded = false }) {
-                                            categories.forEach { category ->
-                                                DropdownMenuItem(onClick = {
-                                                    selectedCategory = category; categoryExpanded =
-                                                    false
-                                                }) {
-                                                    Text(text = category)
-                                                }
-                                            }
-                                        }
-                                        DropdownMenu(
-                                            expanded = cityExpanded,
-                                            onDismissRequest = { cityExpanded = false }) {
-                                            location?.cities!!.forEach { ct ->
-                                                DropdownMenuItem(onClick = {
-                                                    city = ct; cityExpanded = false
-                                                }) {
-                                                    Text(text = ct)
-                                                }
-                                            }
-                                        }
-                                        DropdownMenu(
-                                            expanded = divisionExpanded,
-                                            onDismissRequest = { divisionExpanded = false }) {
-                                            location?.divisions!!.forEach { dv ->
-                                                DropdownMenuItem(onClick = {
-                                                    division = dv; divisionExpanded = false
-                                                }) {
-                                                    Text(text = dv)
-                                                }
-                                            }
-                                        }
-                                        DropdownMenu(
-                                            expanded = sortByExpanded,
-                                            onDismissRequest = { sortByExpanded = false }) {
-                                            sortOrders.forEach { so ->
-                                                DropdownMenuItem(onClick = {
-                                                    sortBy = so; sortByExpanded = false
-                                                }) {
-                                                    Text(text = so)
-                                                }
-                                            }
-                                        }
-                                        Row(
-                                            modifier = Modifier
-                                                .fillMaxWidth()
-                                                .padding(top = 8.dp),
-                                            horizontalArrangement = Arrangement.spacedBy(4.dp)
-                                        ) {
-                                            Button(onClick = {
-                                                categoryExpanded = !categoryExpanded
-                                            }, modifier = Modifier.fillMaxWidth(0.5f)) {
-                                                Text(text = "Category")
-                                            }
-                                            Button(
-                                                onClick = { sortByExpanded = !sortByExpanded },
-                                                modifier = Modifier.fillMaxWidth()
-                                            ) {
-                                                Text(text = "Sort By")
-                                            }
-                                        }
-                                        Row(
-                                            modifier = Modifier
-                                                .fillMaxWidth()
-                                                .padding(vertical = 8.dp),
-                                            horizontalArrangement = Arrangement.spacedBy(4.dp)
-                                        ) {
-                                            Button(
-                                                onClick = { cityExpanded = !cityExpanded },
-                                                modifier = Modifier.fillMaxWidth(0.5f)
-                                            ) {
-                                                Text(text = "City")
-                                            }
-                                            Button(onClick = {
-                                                divisionExpanded = !divisionExpanded
-                                            }, modifier = Modifier.fillMaxWidth()) {
-                                                Text(text = "Division")
-                                            }
+                                        Button(onClick = {
+                                            categoryExpanded = !categoryExpanded
+                                        }, modifier = Modifier.fillMaxWidth(0.5f)) {
+                                            Text(text = "Category")
                                         }
                                         Button(
-                                            onClick = {
-                                                productsViewModel.resetProducts()
-                                                val category = if (selectedCategory != "All") selectedCategory else null
-                                                val lSortBy = if (sortBy != "None") sortBy else null
-                                                productsViewModel.getProducts(
-                                                    name,
-                                                    city,
-                                                    division,
-                                                    category,
-                                                    lSortBy,
-                                                    isFiltering = true
-                                                )
-                                                filterVisible = false
-                                            },
-                                            modifier = Modifier.fillMaxWidth().padding(bottom = 4.dp)
-                                        ) {
-                                            Text(text = "Filter")
-                                        }
-                                        OutlinedButton(
-                                            onClick = {
-                                                selectedCategory = "All"
-                                                sortBy = "None"
-                                                city = ""
-                                                division = ""
-                                            },
+                                            onClick = { sortByExpanded = !sortByExpanded },
                                             modifier = Modifier.fillMaxWidth()
                                         ) {
-                                            Text(text = "Reset Filters")
+                                            Text(text = "Sort By")
                                         }
+                                    }
+                                    Row(
+                                        modifier = Modifier
+                                            .fillMaxWidth()
+                                            .padding(vertical = 8.dp),
+                                        horizontalArrangement = Arrangement.spacedBy(4.dp)
+                                    ) {
+                                        Button(
+                                            onClick = { cityExpanded = !cityExpanded },
+                                            modifier = Modifier.fillMaxWidth(0.5f)
+                                        ) {
+                                            Text(text = "City")
+                                        }
+                                        Button(onClick = {
+                                            divisionExpanded = !divisionExpanded
+                                        }, modifier = Modifier.fillMaxWidth()) {
+                                            Text(text = "Division")
+                                        }
+                                    }
+                                    Button(
+                                        onClick = {
+                                            productsViewModel.resetProducts()
+                                            productsViewModel.getProducts()
+                                            filterVisible = false
+                                        },
+                                        modifier = Modifier
+                                            .fillMaxWidth()
+                                            .padding(bottom = 4.dp)
+                                    ) {
+                                        Text(text = "Filter")
+                                    }
+                                    OutlinedButton(
+                                        onClick = {
+                                            productsViewModel.resetFilters()
+                                        },
+                                        modifier = Modifier.fillMaxWidth()
+                                    ) {
+                                        Text(text = "Reset Filters")
                                     }
                                 }
                             }
@@ -421,6 +337,37 @@ fun ProductsListScreen(
                 )
             }
         )
+    }
+}
+
+@Composable
+fun Filter(result: String, onFilterClick: () -> Unit) {
+    Card(
+        modifier = Modifier
+            .padding(bottom = 8.dp)
+            .fillMaxWidth()
+            .background(
+                MaterialTheme.colors.primary,
+                RoundedCornerShape(topStart = 6.dp, bottomEnd = 6.dp)
+            )
+    ) {
+        Row(
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically,
+            modifier = Modifier.background(MaterialTheme.colors.primary)
+        ) {
+            Text(
+                text = result,
+                color = MaterialTheme.colors.onPrimary,
+                modifier = Modifier.padding(horizontal = 8.dp)
+            )
+            OutlinedButton(
+                onClick = onFilterClick,
+                modifier = Modifier.padding(4.dp)
+            ) {
+                Text(text = "Filter")
+            }
+        }
     }
 }
 

@@ -1,6 +1,7 @@
 package com.heronet.sellnetbeta.ui.screen.authentication
 
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
@@ -8,6 +9,8 @@ import androidx.compose.material.icons.filled.Visibility
 import androidx.compose.material.icons.filled.VisibilityOff
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.focus.FocusDirection
+import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
@@ -27,6 +30,7 @@ fun LoginScreen(
         var passwordVisibility by remember { mutableStateOf(false) }
         val isLoading by remember { authViewModel.isLoading }
         val authErrorText by remember { authViewModel.errorText }
+        val focusManager = LocalFocusManager.current
 
         Column(modifier = Modifier
             .fillMaxSize()
@@ -41,7 +45,8 @@ fun LoginScreen(
                 isError = authErrorText.contains("Email"),
                 errorText = if (authErrorText.contains("Email")) authErrorText else null,
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email),
-                singleLine = true
+                singleLine = true,
+                keyboardActions = KeyboardActions(onDone = { focusManager.moveFocus(FocusDirection.Down) })
             )
             OutlinedErrorTextField(
                 value = password,
@@ -53,6 +58,7 @@ fun LoginScreen(
                 isError = authErrorText.contains("Password"),
                 errorText = if (authErrorText.contains("Password")) authErrorText else null,
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
+                keyboardActions = KeyboardActions(onDone = { focusManager.clearFocus() }),
                 trailingIcon = {
                     val image = if (passwordVisibility) Icons.Filled.Visibility else Icons.Filled.VisibilityOff
                     IconButton(onClick = { passwordVisibility = !passwordVisibility }

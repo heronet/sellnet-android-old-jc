@@ -2,6 +2,7 @@ package com.heronet.sellnetbeta.ui.screen.authentication
 
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.*
@@ -10,6 +11,8 @@ import androidx.compose.material.icons.filled.Visibility
 import androidx.compose.material.icons.filled.VisibilityOff
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.focus.FocusDirection
+import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
@@ -39,6 +42,7 @@ fun RegisterScreen(
         val registerErrorMessages by remember { authViewModel.registerErrorMessages }
         var canSubmit by remember { mutableStateOf(false) }
         val scrollState = rememberScrollState()
+        val focusManager = LocalFocusManager.current
 
         Column(
             modifier = Modifier
@@ -52,6 +56,8 @@ fun RegisterScreen(
                 label = { Text(text = "Name") },
                 onValueChange = { name = it },
                 enabled = !isLoading,
+                singleLine = true,
+                keyboardActions = KeyboardActions(onDone = { focusManager.moveFocus(FocusDirection.Down) }),
                 modifier = Modifier.fillMaxWidth()
             )
             OutlinedErrorTextField(
@@ -62,8 +68,10 @@ fun RegisterScreen(
                 enabled = !isLoading,
                 modifier = Modifier.fillMaxWidth(),
                 isError = registerErrorMessages.containsKey("Email"),
+                singleLine = true,
                 errorText = registerErrorMessages["Email"],
-                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email)
+                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email),
+                keyboardActions = KeyboardActions(onDone = { focusManager.moveFocus(FocusDirection.Down) })
             )
             OutlinedErrorTextField(
                 value = phone,
@@ -76,9 +84,11 @@ fun RegisterScreen(
                 },
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                 enabled = !isLoading,
+                singleLine = true,
                 modifier = Modifier.fillMaxWidth(),
                 isError = registerErrorMessages.containsKey("Phone"),
-                errorText = registerErrorMessages["Phone"]
+                errorText = registerErrorMessages["Phone"],
+                keyboardActions = KeyboardActions(onDone = { focusManager.moveFocus(FocusDirection.Down) })
             )
             OutlinedErrorTextField(
                 value = password,
@@ -87,9 +97,11 @@ fun RegisterScreen(
                 label = { Text(text = "Password") },
                 onValueChange = { password = it },
                 enabled = !isLoading,
+                singleLine = true,
                 isError = registerErrorMessages.containsKey("Password"),
                 errorText = registerErrorMessages["Password"],
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
+                keyboardActions = KeyboardActions(onDone = { focusManager.clearFocus() }),
                 trailingIcon = {
                     val image =
                         if (passwordVisibility) Icons.Filled.Visibility else Icons.Filled.VisibilityOff
@@ -106,6 +118,8 @@ fun RegisterScreen(
                     label = { Text(text = "City") },
                     onValueChange = { },
                     enabled = false,
+                    singleLine = true,
+                    keyboardActions = KeyboardActions(onDone = { focusManager.clearFocus() }),
                     modifier = Modifier.fillMaxWidth(),
                 )
             }
@@ -124,6 +138,8 @@ fun RegisterScreen(
                     label = { Text(text = "Division") },
                     onValueChange = { },
                     enabled = false,
+                    singleLine = true,
+                    keyboardActions = KeyboardActions(onDone = { focusManager.clearFocus() }),
                     modifier = Modifier.fillMaxWidth(),
                 )
             }
